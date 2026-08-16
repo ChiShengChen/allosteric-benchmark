@@ -1,0 +1,134 @@
+[
+ {
+  "pdb": "7BHV",
+  "chain": "A",
+  "ligand": "TQB",
+  "n": 380,
+  "n_anchor": 11,
+  "n_pos": 9,
+  "sep": 15.391497555468735,
+  "uniprot": [
+   "P31153"
+  ]
+ },
+ {
+  "pdb": "1LEV",
+  "chain": "A",
+  "ligand": "CLI",
+  "n": 311,
+  "n_anchor": 14,
+  "n_pos": 16,
+  "sep": 16.18603861357065,
+  "uniprot": [
+   "P00636"
+  ]
+ },
+ {
+  "pdb": "5ORT",
+  "chain": "A",
+  "ligand": "A5Z",
+  "n": 264,
+  "n_anchor": 20,
+  "n_pos": 8,
+  "sep": 8.057985170003729,
+  "uniprot": [
+   "O14965"
+  ]
+ },
+ {
+  "pdb": "6YUH",
+  "chain": "A",
+  "ligand": "POW",
+  "n": 425,
+  "n_anchor": 16,
+  "n_pos": 11,
+  "sep": 18.81765367945749,
+  "uniprot": [
+   "Q9H7B4"
+  ]
+ },
+ {
+  "pdb": "3K8T",
+  "chain": "A",
+  "ligand": "2A5",
+  "n": 640,
+  "n_anchor": 11,
+  "n_pos": 23,
+  "sep": 14.925324988086524,
+  "uniprot": [
+   "P21524"
+  ]
+ },
+ {
+  "pdb": "6YD1",
+  "chain": "A",
+  "ligand": "OLQ",
+  "n": 305,
+  "n_anchor": 21,
+  "n_pos": 14,
+  "sep": 17.417354592474712,
+  "uniprot": [
+   "P0A031"
+  ]
+ },
+ {
+  "pdb": "4DZY",
+  "chain": "A",
+  "ligand": "WJ1",
+  "n": 309,
+  "n_anchor": 20,
+  "n_pos": 13,
+  "sep": 11.858874525012903,
+  "uniprot": [
+   "Q00972"
+  ]
+ },
+ {
+  "pdb": "8IX0",
+  "chain": "Y",
+  "ligand": "CHL",
+  "n": 218,
+  "n_anchor": 63,
+  "n_pos": 4,
+  "sep": 13.201536804478486,
+  "uniprot": [
+   "P12333"
+  ]
+ },
+ {
+  "pdb": "5Y66",
+  "chain": "A",
+  "ligand": "7ZR",
+  "n": 449,
+  "n_anchor": 34,
+  "n_pos": 18,
+  "sep": 10.572455296665952,
+  "uniprot": [
+   "Q84HF5"
+  ]
+ },
+ {
+  "pdb": "4AVB",
+  "chain": "B",
+  "ligand": "CMP",
+  "n": 324,
+  "n_anchor": 25,
+  "n_pos": 17,
+  "sep": 24.401991619537945,
+  "uniprot": [
+   "O05581"
+  ]
+ },
+ {
+  "pdb": "3ID8",
+  "chain": "A",
+  "ligand": "MRK",
+  "n": 450,
+  "n_anchor": 19,
+  "n_pos": 18,
+  "sep": 9.787352297736094,
+  "uniprot": [
+   "P35557"
+  ]
+ }
+]
