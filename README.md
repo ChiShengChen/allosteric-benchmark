@@ -22,13 +22,13 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
 
 ## TL;DR
 
-- On **68 independent targets**, a distance-only control (`score = distance from the
-  active site`) reaches 42–55% permutation significance. **Any method that does not beat
+- On **101 independent targets**, a distance-only control (`score = distance from the
+  active site`) reaches 46–55% permutation significance. **Any method that does not beat
   that control has not demonstrated anything**, and most published-method ports do not.
 - **ALPS** — perturb the contact graph locally, read the shift in the three lowest
-  Kirchhoff eigenvalues, z-score against distance — is the only method that clearly beats
-  the controls at *localisation*: **24.6% top-5 hit rate** on held-out targets, versus
-  8.8% for the distance control and 10.7% for the strongest published-method port.
+  Kirchhoff eigenvalues, z-score against distance — beats every control on the held-out
+  set, and its margin is largest at *localisation*: **24.4% top-5 hit rate** versus 7.8%
+  for the distance control (3.1×) and 17.2% for the strongest published-method port.
 - Within one identical perturb-and-read framework, **explicitly coherent (quantum)
   readouts performed worse than the spectral and classical ones**. This repo reports that
   plainly and claims no quantum advantage.
@@ -148,33 +148,43 @@ that shared spectrum.
 
 **tier-B is the only column not contaminated by tuning and should be read as the result.**
 
-| Method | QASC's own 3<br>sig / AUC | tier-A (tuning, n=11)<br>sig / AUC | **tier-B (held out, n=57)<br>sig / AUC / hit5** |
+| Method | QASC's own 3<br>sig / AUC | tier-A (tuning, n=11)<br>sig / AUC | **tier-B (held out, n=90)<br>sig / AUC / hit5** |
 |---|---|---|---|
-| **`ALPS`** | 33% / 0.619 | 90.9% / 0.757 | **42.1% / 0.601 / 24.6%** |
-| `ALPS_noresid` | 0% / 0.620 | 90.9% / 0.722 | 42.1% / 0.565 / 21.1% |
-| `apop` | 0% / 0.512 | 80.0% / 0.733 | 41.1% / 0.532 / 10.7% |
-| `cpr_classical` | 0% / 0.519 | 27.3% / 0.596 | 45.6% / 0.566 / 7.0% |
-| `qpr_coherent` | 0% / 0.440 | 9.1% / 0.358 | 7.0% / 0.414 / 3.5% |
-| `ctrl_dist` | 0% / 0.432 | 54.5% / 0.583 | 42.1% / 0.616 / 8.8% |
-| `ctrl_burial` | 33% / 0.631 | 45.5% / 0.613 | 17.5% / 0.457 / 7.0% |
-| `ctrl_random` | 0% / 0.542 | 9.1% / 0.489 | 7.0% / 0.471 / 14.0% |
-| `qasc_baseline` | **100% / 0.731** | 9.1% / 0.412 | **7.0% / 0.417 / 0.0%** |
-| `qasc_degseed` | 100% / 0.732 | 18.2% / 0.413 | 7.0% / 0.418 / 0.0% |
-| `qasc_distcorr` | 67% / 0.742 | 27.3% / 0.474 | 15.8% / 0.476 / 7.0% |
-| `btb` | 0% / 0.301 | 18.2% / 0.446 | 19.3% / 0.488 / 15.8% |
-| `corrsite` | 0% / 0.445 | 27.3% / 0.534 | 10.5% / 0.437 / 7.0% |
-| `prs` | 0% / 0.365 | 18.2% / 0.492 | 15.8% / 0.485 / 7.0% |
-| `enaqt` | 0% / 0.518 | 9.1% / 0.511 | 10.5% / 0.505 / 8.8% |
+| **`ALPS`** | 33% / 0.619 | 90.9% / 0.757 | **48.9% / 0.603 / 24.4%** |
+| `ALPS_noresid` | 0% / 0.620 | 90.9% / 0.722 | 46.7% / 0.584 / 25.6% |
+| `apop` | 0% / 0.512 | 80.0% / 0.733 | 50.6% / 0.564 / 17.2% |
+| `apop+dist` | 0% / 0.487 | 80.0% / 0.753 | 47.1% / 0.593 / 23.0% |
+| `cpr_classical` | 0% / 0.519 | 27.3% / 0.596 | 42.7% / 0.542 / 11.2% |
+| `qpr_coherent` | 0% / 0.440 | 9.1% / 0.358 | 5.6% / 0.400 / 4.5% |
+| `ctrl_dist` | 0% / 0.432 | 54.5% / 0.583 | 45.6% / 0.614 / 7.8% |
+| `ctrl_burial` | 33% / 0.631 | 45.5% / 0.613 | 21.1% / 0.466 / 10.0% |
+| `ctrl_random` | 0% / 0.542 | 9.1% / 0.489 | 8.9% / 0.473 / 13.3% |
+| `qasc_baseline` | 100% / 0.731 | 9.1% / 0.412 | **7.8% / 0.416 / 4.4%** |
+| `qasc_degseed` | 100% / 0.732 | 18.2% / 0.413 | 7.8% / 0.415 / 4.4% |
+| `qasc_distcorr` | 67% / 0.742 | 27.3% / 0.474 | 13.3% / 0.457 / 10.0% |
+| `btb` | 0% / 0.301 | 18.2% / 0.446 | 17.8% / 0.465 / 16.7% |
+| `corrsite` | 0% / 0.445 | 27.3% / 0.534 | 16.7% / 0.442 / 11.1% |
+| `prs` | 0% / 0.365 | 18.2% / 0.492 | 20.0% / 0.501 / 5.6% |
+| `enaqt` | 0% / 0.518 | 9.1% / 0.511 | 12.2% / 0.507 / 8.9% |
 
 ### 4.1 The honest reading of ALPS
 
-On held-out targets ALPS does **not** beat the distance-only control on significance rate
-(42.1% both). What it wins is **localisation**: a 24.6% top-5 hit rate, the highest of all
-22 methods, ~2.8× the distance control and ~2.3× the strongest published-method port. If
-the deliverable is "five residues worth testing experimentally", ALPS is currently the only
-one of these that is worth running.
+On the 90 held-out targets ALPS beats the distance-only control on significance
+(48.9% vs 45.6%) but that margin is small and inside the confidence interval. The
+substantial win is **localisation**: a 24.4% top-5 hit rate against 7.8% for the distance
+control — 3.1× — and 17.2% for `apop`, the strongest published-method port. ALPS also has
+the best in-pool ranking quality (AUC 0.603 vs 0.564 for `apop`) and the shortest median
+DCC of the strong methods (20.2 Å vs 26.4 Å).
 
-The tier-A → tier-B drop (90.9% → 42.1%) has two causes and both should be stated:
+`apop` edges ALPS on raw significance rate (50.6% vs 48.9%) while losing on AUC, hit5 and
+DCC. If the deliverable is "five residues worth testing experimentally", ALPS is the better
+choice; if it is "does this protein show any enrichment at all", they are equivalent.
+
+Removing the distance z-score (`ALPS_noresid`) costs significance (46.7%) and AUC (0.584)
+but not hit rate (25.6%), so the residualisation sharpens the ranking overall rather than
+the very top of it.
+
+The tier-A → tier-B drop (90.9% → 48.9%) has two causes and both should be stated:
 hyperparameters were selected on tier-A, and tier-A's labels are higher quality.
 
 ### 4.2 Kernel ablation — the coherent readout loses
@@ -196,9 +206,9 @@ Reported in both directions, because both are true:
 - **It is not an artefact on its own targets.** On the three targets shipped with QASC it
   reaches 100% significance and AUC 0.731 while *all three* trivial controls fail
   (distance 0%, random 0%, burial 33%). That result is real and survives the controls.
-- **It does not transfer.** On 68 independent targets it sits exactly at the random control
-  (7.0% vs 7.0%), with AUC consistently below 0.5 and a **0.0% top-5 hit rate** across 57
-  held-out targets.
+- **It does not transfer.** On 101 independent targets it sits at or below the random
+  control (7.8% vs 8.9% on the 90 held-out targets), with AUC consistently below 0.5
+  (0.412, 0.416) and a top-5 hit rate of 4.4% against the random control's 13.3%.
 - **The mechanism is measurable.** Its score correlates with distance-to-anchor at −0.713 /
   −0.621 / −0.604 on the three sets — it is largely a proximity ranker. On its own three
   targets the annotated allosteric residues happen to sit **4.2 Å closer** to the active
@@ -213,7 +223,7 @@ conditioning) improve it measurably.
 ### 4.4 Nothing localises to 4 Å
 
 DCC ≤ 4 Å success is **0% for every method on every set**; median DCC is 18–33 Å. Note that
-`ctrl_random` posts a *median* DCC of 20.6 Å, so median DCC alone is easy to game by
+`ctrl_random` posts a *median* DCC of 20.5 Å, so median DCC alone is easy to game by
 predicting near the protein centre — read it together with `hit5`, never alone.
 
 ---
@@ -229,8 +239,9 @@ predicting near the protein centre — read it together with `hit5`, never alone
    not strictly an apo test. QASC's own three targets *are* apo — a systematic difference.
 5. `apop`, `qpr`, `cpr` are skipped for N > 660 (they need O(N) eigendecompositions), so
    their n is slightly lower.
-6. **Small samples.** tier-A is 11 targets; tier-B at n = 57 gives roughly ±13% on a 42%
-   rate.
+6. **Small samples.** tier-A is 11 targets; tier-B at n = 90 gives roughly ±10% on a 49%
+   rate, so the ALPS-vs-`ctrl_dist` and ALPS-vs-`apop` gaps on *significance* are inside
+   the interval. The `hit5` gap (24.4% vs 7.8%) is the one that is comfortably outside it.
 
 ---
 
@@ -267,7 +278,7 @@ methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
-  targets_b/     tier-B  (90 npz)
+  targets_b/     tier-B  (90 npz, all evaluated)
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
 docs/
