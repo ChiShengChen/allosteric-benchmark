@@ -11,11 +11,18 @@ This script tests the cheap fix directly: keep ALPS's ranking, but pick the k
 residues greedily subject to a minimum separation, so the selection describes k
 distinct places instead of one place five times.
 
-  top-k        the current selection: five highest scores
-  diverse-k    highest score first, then each next residue must be >= MIN_SEP A
-               from every residue already chosen
-  spread-k     control: ignore the scores entirely, maximise spread over the
-               same candidate pool
+  top-k         the current selection: five highest scores
+  diverse-k     highest score first, then each next residue must be >= MIN_SEP A
+                from every residue already chosen
+  shortlist+spread
+                use the score only to shortlist the top M, then pick the most
+                spatially spread k *within that shortlist*
+  CONTROL pool-spread
+                the same spread rule applied to the whole distal pool, with the
+                scores never used. This is what separates "the ranking is doing
+                the work" from "spreading out is doing the work".
+  CONTROL random
+                k drawn at random from the whole distal pool
 
 Usage: python3 scripts/diversify.py [--targets data/targets_b] [--min-sep 10]
 """
@@ -71,8 +78,9 @@ def main():
     ap.add_argument("--pool-m", type=int, default=26)
     a = ap.parse_args()
 
-    res = {key: [] for key in ("topk", "diverse", "spread")}
-    spreads = {key: [] for key in ("topk", "diverse", "spread")}
+    keys = ("topk", "diverse", "shortlist_spread", "pool_spread", "random")
+    res = {key: [] for key in keys}
+    spreads = {key: [] for key in keys}
     for f in sorted(glob.glob(os.path.join(a.targets, "*.npz"))):
         d = np.load(f)
         cb, anchor, y = d["cb"], d["anchor"], d["y"].astype(int)
@@ -83,10 +91,14 @@ def main():
         s = pocket_smooth(rank_percentile(alps_scores(cb, anchor, pool)), A)
         order = np.where(pool)[0][np.argsort(s[pool])[::-1]]
 
+        rng = np.random.default_rng(0)
+        allc = np.where(pool)[0]
         sets = {
             "topk": [int(i) for i in order[:a.k]],
             "diverse": diverse_topk(order, cb, a.k, a.min_sep),
-            "spread": max_spread(order[:a.pool_m], cb, a.k),
+            "shortlist_spread": max_spread(order[:a.pool_m], cb, a.k),
+            "pool_spread": max_spread(allc, cb, a.k),
+            "random": [int(i) for i in rng.choice(allc, a.k, replace=False)],
         }
         for key, idx in sets.items():
             res[key].append(int(bool(y[idx].sum())))
@@ -101,8 +113,10 @@ def main():
     print(f"{'selection':28s} {'hit rate':>9s} {'mean spread':>12s}")
     name = {"topk": "top-k by score (current)",
             "diverse": f"score + >={a.min_sep:.0f} A separation",
-            "spread": "max spread, scores ignored"}
-    for key in ("topk", "diverse", "spread"):
+            "shortlist_spread": f"score shortlist top-{a.pool_m} + max spread",
+            "pool_spread": "CONTROL spread over whole pool",
+            "random": "CONTROL random from whole pool"}
+    for key in keys:
         print(f"{name[key]:28s} {np.mean(res[key])*100:8.1f}% "
               f"{np.mean(spreads[key]):11.1f} A")
 

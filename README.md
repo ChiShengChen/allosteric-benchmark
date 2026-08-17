@@ -34,6 +34,12 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   transfer inside the perturbation framework, ENAQT dephasing, degeneracy structure, and
   eigenvector content. Section 5 records where a quantum walk could still plausibly sit —
   and it is not in the physics readout.
+- Casting cooperative site selection as a **QUBO is mathematically sound** — the
+  objective is genuinely frustrated — but classical annealing solves it exactly at
+  every size tested, the quadratic surrogate is too lossy to be worth solving
+  exactly, and the optimum carries no biological benefit over random selection.
+- The control that beat it is trivial and real: **shortlist by score, then spread
+  out**. Held-out top-5 hit rate 24.4% → **35.6%**, no QUBO and no quantum.
 - **No method reaches the DCC ≤ 4 Å localisation criterion on any target.** Enrichment
   significance and pointing at the right place are different problems, and contact-graph
   methods currently solve only the first.
@@ -259,12 +265,7 @@ all five failed:
 | ENAQT / dephasing-assisted transport | γ swept from 0 to 3·J_max with the rate calibrated to the hopping scale; no optimum appears, results stay at chance |
 | Degeneracy structure (level spacings) under perturbation | 54.5%, versus 90.9% for plain eigenvalue shift |
 | Eigenvector content (active-site participation, mode IPR) | 63.6% and 36.4% |
-
-The pattern is consistent: **every observable that depends on coherent transfer
-probability or eigenvector structure loses; only eigenvalue magnitude wins.** A plausible
-reading is that residue contact graphs lack the symmetry needed to produce meaningful
-eigenvalue degeneracies, and interference effects need degeneracies to appear at all —
-which is also what the CTQW literature predicts for long-time transfer.
+| **Cooperative site selection as a QUBO** (section 6) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
 
 **Where a quantum walk legitimately already sits.** The λ_k that ALPS reads *are* the
 eigenvalues of the CTQW Hamiltonian — the slowest coherent frequencies of the walk. "How
@@ -273,24 +274,23 @@ method. It is equally a description of the Gaussian Network Model's slowest vibr
 modes, so this is a *framing*, not an advantage, and this repository does not present it
 as one.
 
-**What remains genuinely untested**, in descending order of how promising it looks:
+Combinatorial selection was the most promising remaining candidate and it has now been
+tested too — section 6 has the full result. **What is left is two things, and the first
+one is not about accuracy at all:**
 
-1. **Combinatorial selection rather than physical propagation.** Single-residue
-   perturbation is easy classically — this repo already does it. The biological question
-   is cooperative: which *set* of k residues, stiffened together, maximally perturbs the
-   active site? That is C(N, k) — about 2 × 10¹⁰ subsets for N = 300, k = 5 — with an
-   eigendecomposition per evaluation, so classically it is a greedy approximation at best.
-   It maps directly onto a QUBO/Ising form. This puts quantum on a subproblem that is
-   genuinely combinatorially hard, instead of on a physics readout where the measurements
-   above show classical does better.
+1. **Algorithmic speedup rather than a better estimator.** Every negative result above is
+   about quantum failing to *predict* better. None of them touches cost. ALPS needs N
+   eigendecompositions, O(N⁴), and the cooperative experiment showed the true bottleneck
+   is building the coupling matrix — C(N, 2) eigendecompositions — not the search over
+   it. Estimating spectral shifts by quantum phase estimation on the walk operator would
+   not require full diagonalisation. This is the one framing that survives everything
+   measured here, precisely because it never claims better predictions.
 2. **Symmetric multimers.** Every target here is a single chain by construction, and
-   single chains are exactly where eigenvalue degeneracies are absent. Symmetric
-   oligomers are where degeneracy is real and where allostery *is* symmetry breaking. The
-   negative results above do not transfer to that regime because it was never tested.
-3. **Algorithmic speedup rather than accuracy.** ALPS needs N eigendecompositions, O(N⁴).
-   Estimating spectral shifts via quantum phase estimation on the walk operator would not
-   need full diagonalisation. This is a scaling claim, not an accuracy claim, and it is
-   the one framing that survives every negative result above.
+   single chains are exactly where eigenvalue degeneracies are absent — which is the most
+   likely reason every interference-dependent observable failed. Symmetric oligomers are
+   where degeneracy is real and where allostery *is* symmetry breaking. The negative
+   results above genuinely do not transfer to that regime, because it was never tested.
+   Building a multimer benchmark is the obvious next experiment.
 
 **Not worth further tuning:** more variants of the coherent readout (different time
 scales, initial states, Hamiltonian normalisations). Five have been tried and they land
@@ -299,7 +299,109 @@ hyperparameter problem.
 
 ---
 
-## 6. Limitations
+## 6. Cooperative selection: is it a hard combinatorial problem?
+
+Single-residue perturbation is easy classically. The biological question behind
+cooperative allostery is harder: which **set** of k residues, stiffened together,
+maximally retunes the active-site spectrum? That is C(N, k) — about 2 × 10¹⁰ for
+N = 300, k = 5 — and it maps onto a QUBO/Ising form, which is the shape a quantum
+annealer or QAOA consumes. `methods/cooperative.py` and `scripts/cooperative.py`
+test whether that framing earns its keep, before proposing any solver for it.
+
+The surrogate is `f(S) ≈ Σ h_i x_i + Σ J_ij x_i x_j`, with `h_i = f({i})` the
+single-residue response and `J_ij = f({i,j}) − f({i}) − f({j})` the non-additive
+part, both computed exactly by eigendecomposition on a score-shortlisted candidate
+set.
+
+**The objective really is non-additive and frustrated.** This part passes:
+
+| | tier-A (n=11) | tier-B held out (n=89) |
+|---|---|---|
+| median \|J_ij\| / mean h | 0.194 | 0.211 |
+| pairs with \|J\| > 10% of h | 68.2% | 69.0% |
+| couplings that are negative | 39.8% | 39.7% |
+| greedy finds the exact optimum | 9% of targets | 7% of targets |
+| greedy shortfall vs exact | 3.9% | 8.2% |
+
+Roughly 40% of the couplings are negative, i.e. genuinely frustrated — the
+structure that makes Ising problems hard — and greedy selection is measurably
+suboptimal. So the QUBO framing is legitimate, not a retrofit.
+
+**But three independent findings close the door on a quantum solver here.**
+
+*1. Classical annealing already solves it exactly.* Simulated annealing matched
+the exhaustive optimum on every target at every size tested:
+
+| candidates M | k | C(M, k) | annealing = exact optimum |
+|---|---|---|---|
+| 26 | 5 | 65,780 | ✓ all targets |
+| 34 | 5 | 278,256 | ✓ |
+| 40 | 6 | 3,838,380 | ✓ |
+| 34 | 7 | **5,379,616** | ✓ |
+
+The residual gaps are ~1e-16, i.e. floating point. There is no headroom for a
+better search. And the real cost is not the search at all — it is building `J`,
+which needs C(N, 2) eigendecompositions. The oracle is the bottleneck, not the
+optimiser.
+
+*2. Solving the surrogate exactly gives a worse true answer than greedy.* The
+quadratic approximation carries 16.4% (tier-A) and **37.9%** (tier-B) relative
+error against the true eigenvalue objective. On the held-out set the exhaustive
+QUBO optimum scores **f(S) = 0.797** under the true objective while greedy's set
+scores **0.843**. Optimising the surrogate harder makes the real answer worse.
+
+*3. The QUBO optimum has no biological advantage on held-out data.* Hit rate for
+finding a true allosteric residue, tier-B (n=89):
+
+| selection | hit rate |
+|---|---|
+| top-k by single-residue score | 23.6% |
+| greedy on the QUBO | 24.7% |
+| **exhaustive QUBO optimum** | **23.6%** |
+| CONTROL random k-subset of the same candidates | 25.7% |
+| CONTROL maximum spatial spread over the same candidates | **36.0%** |
+
+The exactly-solved QUBO does not beat picking at random from the same shortlist.
+A trivial spread heuristic beats all of them. On tier-A (n = 11) the QUBO looked
+good at 45.5%; that did not survive n = 89, which is a reminder of what an
+11-target tuning set can and cannot support.
+
+**Verdict.** The formulation is mathematically sound and the problem is genuinely
+frustrated, but classical annealing saturates it, the surrogate is too lossy to
+be worth optimising exactly, and the result carries no biological benefit. This
+was the most promising remaining place to put a quantum solver, and it does not
+hold up.
+
+---
+
+## 7. What the controls found instead: diversify the top-k
+
+The control that beat the QUBO turned out to be a real, cheap improvement to the
+method. The k highest-scoring residues are usually contacts of each other — mean
+pairwise separation 8.2 Å — so five of them describe **one site five times**.
+
+`scripts/diversify.py`, held-out tier-B (n = 90):
+
+| selection | hit rate | mean spread |
+|---|---|---|
+| top-5 by score (what ALPS did) | 24.4% | 8.2 Å |
+| score, then ≥ 10 Å minimum separation | 31.1% | 16.5 Å |
+| **score shortlists top-26, then maximum spread** | **35.6%** | 17.9 Å |
+| CONTROL same spread rule over the whole distal pool | **10.0%** | 34.9 Å |
+| CONTROL random 5 from the whole distal pool | 17.8% | 22.4 Å |
+
+**Both halves are necessary.** Applying the spread rule to the whole pool, with
+the scores never used, gives 10.0% — below random — because it just picks the
+corners of the protein. The score decides which 26 residues are worth
+considering; the spread decides which 5 of those are not redundant. Neither
+works alone.
+
+This is a 1.46× improvement in held-out top-5 hit rate for a few lines of
+geometry, no QUBO and no quantum. It is exposed as `alps_select()`.
+
+---
+
+## 8. Limitations
 
 1. **Proxy labels.** `y` = "a drug-like molecule binds here, ≥ 8 Å from the catalytic site",
    not an experimentally validated allosteric site.
@@ -310,13 +412,16 @@ hyperparameter problem.
    not strictly an apo test. QASC's own three targets *are* apo — a systematic difference.
 5. `apop`, `qpr`, `cpr` are skipped for N > 660 (they need O(N) eigendecompositions), so
    their n is slightly lower.
-6. **Small samples.** tier-A is 11 targets; tier-B at n = 90 gives roughly ±10% on a 49%
+6. **An 11-target tuning set can mislead.** The cooperative-QUBO result looked
+   strong on tier-A (45.5% hit rate) and vanished on tier-B (23.6%, below the
+   random control). Treat every tier-A number as a hypothesis, not a result.
+7. **Small samples.** tier-A is 11 targets; tier-B at n = 90 gives roughly ±10% on a 49%
    rate, so the ALPS-vs-`ctrl_dist` and ALPS-vs-`apop` gaps on *significance* are inside
    the interval. The `hit5` gap (24.4% vs 7.8%) is the one that is comfortably outside it.
 
 ---
 
-## 7. Reproduce
+## 9. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -329,26 +434,30 @@ python3 scripts/evaluate.py --targets data/targets_b      # tier-B (held out)
 python3 scripts/evaluate.py --targets data/qasc_targets   # QASC's own three
 
 python3 scripts/ablate_readouts.py                       # which observable carries the signal
+python3 scripts/cooperative.py --targets data/targets_b  # is cooperative selection hard?
+python3 scripts/diversify.py  --targets data/targets_b   # top-k selection strategies
 ```
 
 Scoring your own structure:
 
 ```python
 import numpy as np
-from methods.alps import alps_scores
+from methods.alps import alps_scores, alps_select
 
 cb     = ...   # (N, 3) per-residue Cbeta coordinates
 anchor = ...   # indices of the active-site residues
 scores = alps_scores(cb, anchor)          # (N,) higher = more allosteric
+top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 ```
 
 ---
 
-## 8. Repository layout
+## 10. Repository layout
 
 ```
-methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py
-scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  ablate_readouts.py
+methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
+scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
+             ablate_readouts.py  cooperative.py  diversify.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
@@ -368,7 +477,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 9. Credits
+## 11. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)
