@@ -1,54 +1,70 @@
 # allosteric-benchmark
 
-An independent, reproducible benchmark for **allosteric site prediction from minimal
-structural input** — per-residue Cβ coordinates plus the active-site residue indices,
-and nothing else. No MD trajectories, no bound (holo) reference structure, no learned
-weights at inference.
+Can a quantum walk predict allosteric sites better than classical methods on the same
+input? This repository was built to answer that, and the answer it measured is **no** —
+across seven different ways of inserting one. It ships the benchmark, the controls and
+the code that produced that result, plus the classical method that came out of the
+search.
 
-It contains three things:
+Everything works from the same minimal input: **per-residue Cβ coordinates plus the
+active-site residue indices**, nothing else. No MD trajectories, no bound (holo)
+reference structure, no learned weights at inference. Reproducible from public data
+with `numpy` + `scipy`.
 
-1. **A benchmark builder** that constructs a family-declustered test set straight from
-   RCSB PDB, because the field's standard benchmark servers (ASD, ASBench, CASBench)
-   are currently unreachable.
-2. **Twelve methods** — quantum-walk, elastic-network, graph-propagation and machine-free
-   baselines — implemented against one identical input signature, post-processing and
-   scoring protocol, plus **three deliberately trivial controls**.
-3. **ALPS**, a new method that came out of the comparison, with its design traced to
-   specific measurements rather than intuition.
+**Three deliverables:**
 
-Everything here is reproducible from public data with `numpy` + `scipy`.
+1. **A benchmark with trivial controls.** Family-declustered targets built straight from
+   RCSB PDB, because the field's standard benchmark servers (ASD, ASBench, CASBench) are
+   currently unreachable. Every result is reported beside a distance-only, a burial-only
+   and a random control — because on this task those controls are strong, and several
+   published-method ports do not beat them.
+2. **A systematic negative result on quantum walks**, with the mechanism measured rather
+   than asserted, and two self-corrections recorded in place where a small-sample
+   finding did not survive a larger one.
+3. **ALPS**, a classical method that came out of the comparison: perturb the contact
+   graph locally, read the shift in the three lowest Kirchhoff eigenvalues, z-score
+   against distance. Every design decision traces to a measurement in section 3.
+
+> **On the quantum framing.** The Kirchhoff matrix ALPS reads *is* the continuous-time
+> quantum walk Hamiltonian, so "how does ligand binding retune the walk's low-lying
+> spectrum" is a fair description of it. It is equally a description of the Gaussian
+> Network Model's slowest vibrational modes — the same numbers. **No quantum advantage
+> is claimed anywhere in this repository**, and section 5 records the seven attempts
+> that failed to find one.
 
 ---
 
 ## TL;DR
 
-- On **101 independent targets**, a distance-only control (`score = distance from the
-  active site`) reaches 46–55% permutation significance. **Any method that does not beat
-  that control has not demonstrated anything**, and most published-method ports do not.
-- **ALPS** — perturb the contact graph locally, read the shift in the three lowest
-  Kirchhoff eigenvalues, z-score against distance — beats every control on the held-out
-  set, and its margin is largest at *localisation*: **24.4% top-5 hit rate** versus 7.8%
-  for the distance control (3.1×) and 17.2% for the strongest published-method port.
-- **Every place to put a quantum walk that was tested here loses** to a plain
-  eigenvalue-shift readout: coherent transfer amplitude, coherent
-  transfer inside the perturbation framework, ENAQT dephasing, degeneracy structure, and
-  eigenvector content. Section 5 records where a quantum walk could still plausibly sit —
-  and it is not in the physics readout.
-- Casting cooperative site selection as a **QUBO is mathematically sound** — the
-  objective is genuinely frustrated — but classical annealing solves it exactly at
-  every size tested, the quadratic surrogate is too lossy to be worth solving
-  exactly, and the optimum carries no biological benefit over random selection.
-- The control that beat it is trivial and real: **shortlist by score, then spread
-  out**. Held-out top-5 hit rate 24.4% → **35.6%**, no QUBO and no quantum.
-- **Seven** places to put a quantum walk have now been measured and all seven lose,
-  including the last mechanism-backed one: symmetric multimers do enrich spectral
-  degeneracy (6.5% vs 3.1% of near-degenerate gaps), but the degeneracy-sensitive
-  readout still loses there. That result reversed when the symmetric group went from
-  n = 4 to n = 29 — section 8 keeps both readings.
-- **No method reaches the DCC ≤ 4 Å localisation criterion** [Omage et al. 2025] **on any
-  target.** Enrichment
-  significance and pointing at the right place are different problems, and contact-graph
-  methods currently solve only the first.
+**What the controls show.** On 101 independent targets a distance-only control
+(`score = distance from the active site`) reaches 46–55% permutation significance and
+the highest AUC of anything tested. **A method that does not beat that control has not
+demonstrated anything** — and most published-method ports here do not.
+
+**What ALPS achieves.** It beats every control on *localisation*: **24.4% top-5 hit
+rate** on the held-out set against 7.8% for the distance control (3.1×) and 17.2% for
+the strongest published-method port. Shortlisting by score and then spreading the
+selection spatially — a few lines of geometry, no quantum — lifts that to **35.6%**.
+
+**What ALPS does not achieve.** It is *below* the distance control on AUC (0.603 vs
+0.614) and inside the confidence interval on significance (48.9% vs 45.6%), so
+localisation is the only metric where its lead is real. **No method here reaches the
+DCC ≤ 4 Å criterion** [Omage et al. 2025] **on any target**; enrichment and pointing at
+the right place are different problems and only the first is solved. A 35.6% top-5 hit
+rate is a research result, not a drug-discovery tool.
+
+**What happened to the quantum walk.** Seven insertion points measured, seven failed:
+coherent transfer amplitude; coherent transfer inside the perturbation framework; ENAQT
+dephasing; degeneracy structure; eigenvector content; cooperative selection as a QUBO;
+and degeneracy-sensitive readouts on symmetric multimers. The QUBO framing is
+mathematically sound — the objective is genuinely frustrated — but classical annealing
+solves it exactly at every size tested. Symmetry really does enrich spectral degeneracy
+(6.5% vs 3.1%), just not enough for interference to carry the signal. Section 5 records
+what could still plausibly remain, and it is a *cost* argument, not an accuracy one.
+
+**What to distrust.** Labels here are geometric proxies, not curated allosteric sites;
+the benchmark carries a distance bias; and two findings in this file reversed when the
+sample grew (sections 6 and 8). Both readings are kept rather than deleted.
 
 ---
 
