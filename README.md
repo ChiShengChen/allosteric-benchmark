@@ -40,6 +40,10 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   exactly, and the optimum carries no biological benefit over random selection.
 - The control that beat it is trivial and real: **shortlist by score, then spread
   out**. Held-out top-5 hit rate 24.4% → **35.6%**, no QUBO and no quantum.
+- One quantum-specific observable finally wins somewhere: in **verified symmetric
+  oligomers**, where eigenvalue near-degeneracies are enriched, the degeneracy-sensitive
+  readout beats the plain eigenvalue shift (100% vs 75% significant, AUC 0.731 vs 0.635)
+  while losing on single chains. n = 4 — a lead, not a result. Section 8.
 - **No method reaches the DCC ≤ 4 Å localisation criterion on any target.** Enrichment
   significance and pointing at the right place are different problems, and contact-graph
   methods currently solve only the first.
@@ -285,12 +289,11 @@ one is not about accuracy at all:**
    it. Estimating spectral shifts by quantum phase estimation on the walk operator would
    not require full diagonalisation. This is the one framing that survives everything
    measured here, precisely because it never claims better predictions.
-2. **Symmetric multimers.** Every target here is a single chain by construction, and
-   single chains are exactly where eigenvalue degeneracies are absent — which is the most
-   likely reason every interference-dependent observable failed. Symmetric oligomers are
-   where degeneracy is real and where allostery *is* symmetry breaking. The negative
-   results above genuinely do not transfer to that regime, because it was never tested.
-   Building a multimer benchmark is the obvious next experiment.
+2. **Symmetric multimers — now tested, and the one lead that survived.** Section 8 has
+   the result: degeneracy really is enriched in verified symmetric oligomers, and the
+   degeneracy-sensitive readout beats the plain eigenvalue shift there while losing
+   everywhere else. On n = 4 targets. That is a lead worth powering properly, not a
+   result.
 
 **Not worth further tuning:** more variants of the coherent readout (different time
 scales, initial states, Hamiltonian normalisations). Five have been tried and they land
@@ -401,7 +404,55 @@ geometry, no QUBO and no quantum. It is exposed as `alps_select()`.
 
 ---
 
-## 8. Limitations
+## 8. Symmetric multimers: the one place a quantum-specific observable wins
+
+Section 5 listed symmetric oligomers as the last untested regime, on the reasoning
+that every interference-dependent observable failed on single chains because single
+chains have no eigenvalue degeneracies — and interference needs degeneracies. That
+is now tested. `scripts/build_dataset_multimer.py` builds the benchmark keeping the
+whole assembly as one graph; `scripts/multimer_ablation.py` re-runs the readout
+ablation there and splits targets by whether the chains really are symmetric copies
+(Kabsch RMSD between chains, aligned on shared author residue numbers).
+
+**First: is degeneracy actually enriched?** Fraction of relative gaps below 1% among
+the 20 lowest non-zero Kirchhoff eigenvalues:
+
+| structures | n | gaps < 1% | gaps < 5% | median gap |
+|---|---|---|---|---|
+| single chains (tier-B) | 90 | 3.6% | 38.7% | 7.0% |
+| confirmed symmetric oligomers (chain RMSD < 1 Å) | 26 | **6.3%** | 44.1% | 5.8% |
+
+Near-degenerate pairs roughly double. Modest, but real — and it does **not** show up
+if symmetric and non-symmetric multi-chain structures are pooled, which is how an
+earlier pass of this analysis missed it.
+
+**Second: does the degeneracy-sensitive readout win where degeneracy exists?**
+Same ablation as section 4.2, same perturbation, same distance conditioning:
+
+| readout | single chains<br>(gaps<1% = 3.6%) | asymmetric multi-chain<br>(2.0%) | **symmetric oligomers<br>(6.6%)** |
+|---|---|---|---|
+| `dlam` — eigenvalue shift (ALPS) | **90.9%** / 0.757 | **50.0%** / 0.665 | 75.0% / 0.635 |
+| `dgap` — level spacings (degeneracy) | 54.5% / 0.660 | 37.5% / 0.631 | **100.0%** / **0.731** |
+| `dpart` — active-site participation | 63.6% / 0.682 | 62.5% / 0.645 | 50.0% / 0.647 |
+| `dipr` — mode localisation | 36.4% / 0.637 | 50.0% / 0.660 | 50.0% / 0.636 |
+
+*(cells are % permutation-significant / mean AUC)*
+
+The ordering flips with degeneracy, in the direction the hypothesis predicts: where
+near-degeneracies are scarce the plain eigenvalue shift wins by a wide margin; where
+they are enriched, the observable that reads the degeneracy structure wins instead,
+and does so on every target (median p = 0.0037).
+
+**This is the only positive result for a quantum-specific observable in this
+repository, and it is preliminary.** The symmetric group is n = 4. It is a coherent
+signal — three degeneracy levels, monotone ordering, a mechanism that was predicted
+in advance rather than fitted afterwards — but four targets cannot carry a
+conclusion. What it justifies is a properly powered symmetric-oligomer benchmark,
+not a claim.
+
+---
+
+## 9. Limitations
 
 1. **Proxy labels.** `y` = "a drug-like molecule binds here, ≥ 8 Å from the catalytic site",
    not an experimentally validated allosteric site.
@@ -421,7 +472,7 @@ geometry, no QUBO and no quantum. It is exposed as `alps_select()`.
 
 ---
 
-## 9. Reproduce
+## 10. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -436,6 +487,9 @@ python3 scripts/evaluate.py --targets data/qasc_targets   # QASC's own three
 python3 scripts/ablate_readouts.py                       # which observable carries the signal
 python3 scripts/cooperative.py --targets data/targets_b  # is cooperative selection hard?
 python3 scripts/diversify.py  --targets data/targets_b   # top-k selection strategies
+
+python3 scripts/build_dataset_multimer.py 2694 60        # symmetric-oligomer set
+python3 scripts/multimer_ablation.py                     # readouts where degeneracy exists
 ```
 
 Scoring your own structure:
@@ -452,15 +506,17 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ---
 
-## 10. Repository layout
+## 11. Repository layout
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
              ablate_readouts.py  cooperative.py  diversify.py
+             build_dataset_multimer.py  multimer_ablation.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
+  targets_multimer/  symmetric-oligomer set (34 npz, whole assembly per graph)
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
 docs/
@@ -477,7 +533,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 11. Credits
+## 12. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)

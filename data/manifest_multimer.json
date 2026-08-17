@@ -1,0 +1,212 @@
+[
+ {
+  "pdb": "1QOQ",
+  "chain": "A+B",
+  "ligand": "IGP",
+  "n": 648,
+  "n_anchor": 19,
+  "n_pos": 16,
+  "sep": 20.45143987595983,
+  "uniprot": [
+   "P00929",
+   "P0A2K1"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2OLC",
+  "chain": "A+B",
+  "ligand": "CPS",
+  "n": 752,
+  "n_anchor": 38,
+  "n_pos": 7,
+  "sep": 29.190677792747465,
+  "uniprot": [
+   "O31663"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2F17",
+  "chain": "A+B",
+  "ligand": "PYI",
+  "n": 498,
+  "n_anchor": 20,
+  "n_pos": 17,
+  "sep": 9.452750393404031,
+  "uniprot": [
+   "Q9R0M5"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2G70",
+  "chain": "A+B",
+  "ligand": "HNT",
+  "n": 526,
+  "n_anchor": 47,
+  "n_pos": 6,
+  "sep": 14.983579478882874,
+  "uniprot": [
+   "P11086"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2QE6",
+  "chain": "A+B",
+  "ligand": "NEP",
+  "n": 530,
+  "n_anchor": 41,
+  "n_pos": 8,
+  "sep": 10.404182139889707,
+  "uniprot": [
+   "Q47KX2"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2WK9",
+  "chain": "A+B",
+  "ligand": "PLG",
+  "n": 762,
+  "n_anchor": 18,
+  "n_pos": 21,
+  "sep": 8.465531643080663,
+  "uniprot": [
+   "Q9KM65"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2YY8",
+  "chain": "A+B",
+  "ligand": "MTA",
+  "n": 348,
+  "n_anchor": 22,
+  "n_pos": 17,
+  "sep": 8.620586638970693,
+  "uniprot": [
+   "O58214"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "2ZW7",
+  "chain": "A+B",
+  "ligand": "BLM",
+  "n": 586,
+  "n_anchor": 24,
+  "n_pos": 34,
+  "sep": 21.723295928564802,
+  "uniprot": [
+   "Q53796"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "3CI5",
+  "chain": "A+G",
+  "ligand": "PTR",
+  "n": 492,
+  "n_anchor": 24,
+  "n_pos": 13,
+  "sep": 8.024784794622223,
+  "uniprot": [
+   "P06396",
+   "P07830"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "1KZ8",
+  "chain": "A+F",
+  "ligand": "PFE",
+  "n": 638,
+  "n_anchor": 61,
+  "n_pos": 12,
+  "sep": 10.728554189638036,
+  "uniprot": [
+   "P00636"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "9IEB",
+  "chain": "A+B",
+  "ligand": "VSL",
+  "n": 694,
+  "n_anchor": 60,
+  "n_pos": 7,
+  "sep": 11.81676986320712,
+  "uniprot": [
+   "P49366"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "1KRU",
+  "chain": "A+B+C",
+  "ligand": "IPT",
+  "n": 603,
+  "n_anchor": 75,
+  "n_pos": 5,
+  "sep": 9.796001531237122,
+  "uniprot": [
+   "P07464"
+  ],
+  "n_chains": 3
+ },
+ {
+  "pdb": "1H1T",
+  "chain": "A+B",
+  "ligand": "PNS",
+  "n": 315,
+  "n_anchor": 16,
+  "n_pos": 15,
+  "sep": 13.796585012241255,
+  "uniprot": [
+   "P0A6I6"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "5EGL",
+  "chain": "A+B+C",
+  "ligand": "BCO",
+  "n": 492,
+  "n_anchor": 23,
+  "n_pos": 26,
+  "sep": 10.909738814472146,
+  "uniprot": [
+   "A0A0H3K033"
+  ],
+  "n_chains": 3
+ },
+ {
+  "pdb": "6YC7",
+  "chain": "A+B+C+D+E+F",
+  "ligand": "A5O",
+  "n": 605,
+  "n_anchor": 34,
+  "n_pos": 9,
+  "sep": 13.109524552782226,
+  "uniprot": [
+   "H7C694"
+  ],
+  "n_chains": 6
+ },
+ {
+  "pdb": "3RSQ",
+  "chain": "A+B",
+  "ligand": "NAX",
+  "n": 496,
+  "n_anchor": 21,
+  "n_pos": 19,
+  "sep": 24.622010092598046,
+  "uniprot": [
+   "Q9X024"
+  ],
+  "n_chains": 2
+ }
+]
