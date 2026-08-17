@@ -20,7 +20,7 @@ python3 scripts/evaluate.py --targets data/qasc_targets   # QASC 原本的 3 個
 
 ## 1. 資料集怎麼來的
 
-ASD / ASBench / CASBench 的官方伺服器目前**皆已失效**(`mdl.shsmu.edu.cn` 無回應、
+ASD [Huang et al. 2010] / ASBench [Huang et al. 2015] / CASBench [Zlobin et al. 2019] 的官方伺服器目前**皆已失效**(`mdl.shsmu.edu.cn` 無回應、
 `casbench.org` 無法連線),下載連結為 JS 驅動無法自動取得。因此改為**從 RCSB PDB
 直接自建**,規則完全機械化、可重現、無任何手動輸入。
 
@@ -58,19 +58,19 @@ ASD / ASBench / CASBench 的官方伺服器目前**皆已失效**(`mdl.shsmu.edu
 
 | 名稱 | 說明 |
 |---|---|
-| `qasc_baseline` | QASC 原版:Laplacian-CTQW 無限時間平均可通達性 + 鄰接矩陣 IPR 共振轉移,noisy-or 融合 |
-| `qasc_degseed` | **修正版**:IPR 通道改用**度數加權**初始態。均勻疊加態是 Laplacian 的零本徵向量,但**不是鄰接矩陣的本徵向量**,故在 A-walk 下會漂移;度數加權才是自然初始態 |
+| `qasc_baseline` | QASC 原版:Laplacian-CTQW 無限時間平均可通達性 [Mülken & Blumen 2011] + 鄰接矩陣 IPR 共振轉移,noisy-or 融合 |
+| `qasc_degseed` | **修正版**:IPR 通道改用**度數加權**初始態。均勻疊加態是 Laplacian 的零本徵向量,但**不是鄰接矩陣的本徵向量**,故在 A-walk 下會漂移;度數加權才是自然初始態 [Wong et al. 2016] |
 | `qasc_normlap` | 改用對稱正規化 Laplacian,消除度數異質性(CTQW 在 hub 主導的圖上表現不佳) |
-| `enaqt` | Lindblad 純去相干傳輸,去相干率**以最大耦合 J_max 為單位校準**,效率定義為有限時間窗內佔據機率的時間積分 |
+| `enaqt` | Lindblad 純去相干傳輸 [Maier et al. 2019],去相干率**以最大耦合 J_max 為單位校準**,效率定義為有限時間窗內佔據機率的時間積分 |
 
 ### 古典對照(`methods/btb.py`, `methods/enm.py`)
 
 | 名稱 | 說明 |
 |---|---|
-| `btb` / `btb_raw` | Bond-to-bond propensity 的殘基級移植:`M = ½ G Bᵀ L† B`(Laplacian 偽逆的 Green 函數),自 anchor 播種;`btb` 額外做距離條件分位數迴歸。**只計算 source 欄位**,不展開 m×m 矩陣 |
-| `apop` | APOP 式:加勁局部鄰域的彈簧以模擬配體結合,依最慢全域模態的頻率位移排名。**不使用 anchor** |
-| `corrsite` | CorrSite2.0 式:GNM 快/慢模態各自對 anchor 的運動相關性,取兩者 Z-score 最大值 |
-| `prs` | 擾動響應掃描:GNM 共變異數矩陣即線性響應算子 |
+| `btb` / `btb_raw` | Bond-to-bond propensity [Amor et al. 2016; Hodges et al. 2018; Wu et al. 2022] 的殘基級移植:`M = ½ G Bᵀ L† B`(Laplacian 偽逆的 Green 函數),自 anchor 播種;`btb` 額外做距離條件分位數迴歸。**只計算 source 欄位**,不展開 m×m 矩陣 |
+| `apop` | APOP 式 [Kumar et al. 2023]:加勁局部鄰域的彈簧以模擬配體結合,依最慢全域模態的頻率位移排名。**不使用 anchor** |
+| `corrsite` | CorrSite2.0 式 [Xie et al. 2021]:GNM 快/慢模態各自對 anchor 的運動相關性,取兩者 Z-score 最大值 |
+| `prs` | 擾動響應掃描 [Atilgan & Atilgan 2009]:GNM 共變異數矩陣即線性響應算子 |
 
 ### ALPS —— 本研究提出的新方法(`methods/alps.py`)
 
@@ -92,7 +92,7 @@ score(i) = z_d[ Σ_{k≤K} |λ_k(H_i) − λ_k(H_0)| / λ_k(H_0) ]
 | 距離條件 z-score | 把本方法從 82% 提升到 91%;同一修正也把 QASC 自己從 9% 提升到 27% |
 
 **算子的雙重讀法**:Kirchhoff 矩陣同時是 QASC 的 CTQW Hamiltonian 與 GNM 算子。
-其低階本徵值既是量子漫步最慢的相干頻率,也是彈性網路最慢的振動模態——**同一組數字**。
+其低階本徵值既是量子漫步最慢的相干頻率 [Mülken & Blumen 2011],也是彈性網路最慢的振動模態 [Bahar et al. 1997]——**同一組數字**。
 ALPS 量的是「局部結合事件如何重新調諧這個共用頻譜」。
 
 > ⚠️ **本方法不宣稱量子優勢**:此量的古典與量子讀法完全相同,而且在本研究中,
@@ -117,7 +117,7 @@ ALPS 量的是「局部結合事件如何重新調諧這個共用頻譜」。
 | `perm_p` | QASC 自己的判準:單尾置換檢定,真異位殘基平均分是否高於 distal 非 anchor 背景 |
 | `auc` | 在模型實際選擇的候選池(distal 非 anchor)內的 ROC-AUC |
 | `hit5` | top-5 是否命中任一真異位殘基 |
-| `dcc` | top-5 質心到真異位位點質心的距離。**STINGAllo 的成功判準是 DCC ≤ 4 Å** —— 這是「有沒有指對地方」,置換 p 值不測這件事 |
+| `dcc` | top-5 質心到真異位位點質心的距離。**STINGAllo [Omage et al. 2025] 的成功判準是 DCC ≤ 4 Å** —— 這是「有沒有指對地方」,置換 p 值不測這件事 |
 
 所有方法共用完全相同的後處理(rank percentile → QASC 的圖平滑)與候選池,確保公平。
 
@@ -126,3 +126,35 @@ ALPS 量的是「局部結合事件如何重新調諧這個共用頻譜」。
 ## 4. 結果
 
 見 [`RESULTS.md`](RESULTS.md)。
+
+
+---
+
+## 參考文獻
+
+本文件與 [`RESULTS.zh.md`](RESULTS.zh.md) 中所有方法的出處。完整文獻回顧見 [`literature-review.zh.md`](literature-review.zh.md)。
+
+- **[Bahar et al. 1997]** Direct evaluation of thermal fluctuations in proteins using a single-parameter harmonic potential. *Folding and Design*, 1997. doi:[10.1016/s1359-0278(97)00024-2](https://doi.org/10.1016/s1359-0278(97)00024-2)
+- **[Mülken & Blumen 2011]** Continuous-time quantum walks: Models for coherent transport on complex networks. *Physics Reports*, 2011. doi:[10.1016/j.physrep.2011.01.002](https://doi.org/10.1016/j.physrep.2011.01.002)
+- **[Wong et al. 2016]** Laplacian versus adjacency matrix in quantum walk search. *Quantum Information Processing*, 2016. doi:[10.1007/s11128-016-1373-1](https://doi.org/10.1007/s11128-016-1373-1)
+- **[Maier et al. 2019]** Environment-Assisted Quantum Transport in a 10-qubit Network. *Physical Review Letters*, 2019. doi:[10.1103/physrevlett.122.050501](https://doi.org/10.1103/physrevlett.122.050501)
+- **[Atilgan & Atilgan 2009]** Perturbation-Response Scanning Reveals Ligand Entry-Exit Mechanisms of Ferric Binding Protein. *PLoS Computational Biology*, 2009. doi:[10.1371/journal.pcbi.1000544](https://doi.org/10.1371/journal.pcbi.1000544)
+- **[Amor et al. 2016]** Prediction of allosteric sites and mediating interactions through bond-to-bond propensities. 2016. doi:[10.1101/056275](https://doi.org/10.1101/056275)
+- **[Hodges et al. 2018]** Allostery and cooperativity in multimeric proteins: bond-to-bond propensities in ATCase. *Scientific Reports*, 2018. doi:[10.1038/s41598-018-27992-z](https://doi.org/10.1038/s41598-018-27992-z)
+- **[Wu et al. 2022]** Prediction of allosteric sites and signaling: Insights from benchmarking datasets. *Patterns*, 2022. doi:[10.1016/j.patter.2021.100408](https://doi.org/10.1016/j.patter.2021.100408)
+- **[Kumar et al. 2023]** Predicting allosteric pockets in protein biological assemblages. *Bioinformatics*, 2023. doi:[10.1093/bioinformatics/btad275](https://doi.org/10.1093/bioinformatics/btad275)
+- **[Xie et al. 2021]** Uncovering the Dominant Motion Modes of Allosteric Regulation Improves Allosteric Site Prediction. *Journal of Chemical Information and Modeling*, 2021. doi:[10.1021/acs.jcim.1c01267](https://doi.org/10.1021/acs.jcim.1c01267)
+- **[Greener & Sternberg 2015]** AlloPred: prediction of allosteric pockets on proteins using normal mode perturbation analysis. *BMC Bioinformatics*, 2015. doi:[10.1186/s12859-015-0771-1](https://doi.org/10.1186/s12859-015-0771-1)
+- **[Le Guilloux et al. 2009]** Fpocket: An open source platform for ligand pocket detection. *BMC Bioinformatics*, 2009. doi:[10.1186/1471-2105-10-168](https://doi.org/10.1186/1471-2105-10-168)
+- **[Huang et al. 2013]** Allosite: a method for predicting allosteric sites. *Bioinformatics*, 2013. doi:[10.1093/bioinformatics/btt399](https://doi.org/10.1093/bioinformatics/btt399)
+- **[Tian et al. 2023a]** PASSer: fast and accurate prediction of protein allosteric sites. *Nucleic Acids Research*, 2023. doi:[10.1093/nar/gkad303](https://doi.org/10.1093/nar/gkad303)
+- **[Tian et al. 2023b]** PASSerRank: Prediction of allosteric sites with learning to rank. *Journal of Computational Chemistry*, 2023. doi:[10.1002/jcc.27193](https://doi.org/10.1002/jcc.27193)
+- **[Omage et al. 2025]** STINGAllo: a web server for high-throughput prediction of allosteric site-forming residues using internal protein nanoenvironment descriptors. *Briefings in Bioinformatics*, 2025. doi:[10.1093/bib/bbaf424](https://doi.org/10.1093/bib/bbaf424)
+- **[Meller et al. 2023]** Predicting locations of cryptic pockets from single protein structures using the PocketMiner graph neural network. *Nature Communications*, 2023. doi:[10.1038/s41467-023-36699-3](https://doi.org/10.1038/s41467-023-36699-3)
+- **[Dong et al. 2024]** Allo-Allo: Data-efficient prediction of allosteric sites. 2024. doi:[10.1101/2024.09.28.615583](https://doi.org/10.1101/2024.09.28.615583)
+- **[Zhang et al. 2026]** AlloEF: An Ensemble Model for Protein Allosteric Site Identification Based on Transfer Entropy and Energetic Frustration. *The Journal of Physical Chemistry B*, 2026. doi:[10.1021/acs.jpcb.6c00242](https://doi.org/10.1021/acs.jpcb.6c00242)
+- **[Xie et al. 2023]** Coevolution-based prediction of key allosteric residues for protein function regulation. *eLife*, 2023. doi:[10.7554/elife.81850](https://doi.org/10.7554/elife.81850)
+- **[Huang et al. 2010]** ASD: a comprehensive database of allosteric proteins and modulators. *Nucleic Acids Research*, 2010. doi:[10.1093/nar/gkq1022](https://doi.org/10.1093/nar/gkq1022)
+- **[Huang et al. 2015]** ASBench: benchmarking sets for allosteric discovery. *Bioinformatics*, 2015. doi:[10.1093/bioinformatics/btv169](https://doi.org/10.1093/bioinformatics/btv169)
+- **[Zlobin et al. 2019]** CASBench: A Benchmarking Set of Proteins with Annotated Catalytic and Allosteric Sites in Their Structures. *Acta Naturae*, 2019. doi:[10.32607/20758251-2019-11-1-74-80](https://doi.org/10.32607/20758251-2019-11-1-74-80)
+- **[Ai et al. 2026]** A systematic evaluation of protein allosteric site prediction tools with independent datasets. *Journal of Computer-Aided Molecular Design*, 2026. doi:[10.1007/s10822-026-00831-4](https://doi.org/10.1007/s10822-026-00831-4)

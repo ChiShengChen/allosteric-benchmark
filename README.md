@@ -44,7 +44,8 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   oligomers**, where eigenvalue near-degeneracies are enriched, the degeneracy-sensitive
   readout beats the plain eigenvalue shift (100% vs 75% significant, AUC 0.731 vs 0.635)
   while losing on single chains. n = 4 — a lead, not a result. Section 8.
-- **No method reaches the DCC ≤ 4 Å localisation criterion on any target.** Enrichment
+- **No method reaches the DCC ≤ 4 Å localisation criterion** [Omage et al. 2025] **on any
+  target.** Enrichment
   significance and pointing at the right place are different problems, and contact-graph
   methods currently solve only the first.
 
@@ -56,12 +57,12 @@ The standard annotated benchmarks for this task are effectively offline:
 
 | Resource | Status (checked Aug 2026) |
 |---|---|
-| ASD (`mdl.shsmu.edu.cn/ASD/`) | Server unreachable over HTTPS; download links are JS-driven and not machine-retrievable |
-| CASBench (`mdl.shsmu.edu.cn/CASBench/`) | HTTP 404 |
+| ASD [Huang et al. 2010] (`mdl.shsmu.edu.cn/ASD/`) | Server unreachable over HTTPS; download links are JS-driven and not machine-retrievable |
+| CASBench [Zlobin et al. 2019] (`mdl.shsmu.edu.cn/CASBench/`) | HTTP 404 |
 | `casbench.org` | Does not resolve |
 
-So the benchmark is rebuilt from primary data. Sites are defined the way ASBench and
-CASBench define them — by the residues that directly contact the crystallographic ligand:
+So the benchmark is rebuilt from primary data. Sites are defined the way ASBench [Huang et al. 2015] and
+CASBench [Zlobin et al. 2019] define them — by the residues that directly contact the crystallographic ligand:
 
 | Field | Rule |
 |---|---|
@@ -96,19 +97,31 @@ all share identical post-processing (rank percentile → graph smoothing) and ca
 
 | Name | Description |
 |---|---|
-| `qasc_baseline` | Laplacian-CTQW infinite-time-averaged communicability + adjacency-matrix IPR resonant transfer, fused by noisy-or (a reimplementation of [QASC](https://github.com/Arthur031221/quantum-allosteric-scanner)) |
-| `qasc_degseed` | Same, but the IPR channel is seeded with a **degree-weighted** state. The uniform superposition is a zero-eigenvalue eigenvector of the Laplacian but *not* an eigenvector of the adjacency matrix, so under an adjacency-generated walk it drifts with no driving; degree weighting is the natural initial condition |
-| `qasc_normlap` | Symmetric normalized Laplacian, to remove the degree heterogeneity that degrades coherent walks on hub-dominated graphs |
-| `enaqt` | Lindblad pure-dephasing transport with the dephasing rate **calibrated in units of the largest coupling** and efficiency defined as a finite-window time integral of site occupation |
+| `qasc_baseline` | Laplacian-CTQW infinite-time-averaged communicability [Mülken & Blumen 2011] + adjacency-matrix IPR resonant transfer, fused by noisy-or (a reimplementation of [QASC](https://github.com/Arthur031221/quantum-allosteric-scanner)) |
+| `qasc_degseed` | Same, but the IPR channel is seeded with a **degree-weighted** state. The uniform superposition is a zero-eigenvalue eigenvector of the Laplacian but *not* an eigenvector of the adjacency matrix, so under an adjacency-generated walk it drifts with no driving; degree weighting is the natural initial condition [Wong et al. 2016] |
+| `qasc_normlap` | Symmetric normalized Laplacian, to remove the degree heterogeneity that degrades coherent walks on hub-dominated graphs [Mülken & Blumen 2011] |
+| `enaqt` | Lindblad pure-dephasing transport [Maier et al. 2019] with the dephasing rate **calibrated in units of the largest coupling** and efficiency defined as a finite-window time integral of site occupation |
 
 **Classical / elastic-network** ([`btb.py`](methods/btb.py), [`enm.py`](methods/enm.py))
 
 | Name | Description |
 |---|---|
-| `btb` | Bond-to-bond propensity ported to the residue graph: `M = ½ G Bᵀ L† B` (Green's function of the weighted Laplacian), seeded at the active site, with conditional quantile regression against distance. Only the source columns are formed, never the full m×m matrix |
-| `apop` | Stiffen a local neighbourhood to mimic ligand binding, rank by the induced shift in global mode frequencies. **Does not use the anchor at all** |
-| `corrsite` | GNM slow-mode and fast-mode motion correlation to the anchor, scored as the max of the two Z-scores |
-| `prs` | Perturbation-response scanning: the GNM covariance is the linear response operator |
+| `btb` | Bond-to-bond propensity [Amor et al. 2016; Hodges et al. 2018; Wu et al. 2022] ported to the residue graph: `M = ½ G Bᵀ L† B` (Green's function of the weighted Laplacian), seeded at the active site, with conditional quantile regression against distance. Only the source columns are formed, never the full m×m matrix |
+| `apop` | Stiffen a local neighbourhood to mimic ligand binding, rank by the induced shift in global mode frequencies. **Does not use the anchor at all** [Kumar et al. 2023] |
+| `corrsite` | GNM slow-mode and fast-mode motion correlation to the anchor, scored as the max of the two Z-scores [Xie et al. 2021] |
+| `prs` | Perturbation-response scanning: the GNM covariance is the linear response operator [Atilgan & Atilgan 2009] |
+
+**Not implemented here, but the relevant comparison points.** These need input this
+benchmark deliberately withholds — a pocket detector, a sequence alignment, or a
+trained model — so they are cited rather than run: pocket-detection-based predictors
+`Allosite` [Huang et al. 2013] and the `PASSer` family
+[Tian et al. 2023a; Tian et al. 2023b], all of which depend on `fpocket`
+[Le Guilloux et al. 2009]; the residue-centric,
+pocket-free `STINGAllo` [Omage et al. 2025]; the cryptic-pocket GNN `PocketMiner`
+[Meller et al. 2023]; the elastic-network + ML hybrid `AlloPred`
+[Greener & Sternberg 2015]; the transfer-entropy ensemble `AlloEF` [Zhang et al. 2026];
+the sequence-only
+`Allo-Allo` [Dong et al. 2024]; and the coevolution-based `KeyAlloSite` [Xie et al. 2023].
 
 **Trivial controls — the point of the whole exercise**
 
@@ -143,7 +156,8 @@ Each design decision answers something measured here, not a hunch:
 | Distance-conditional z-score | Lifted this method from 82% → 91% on tier-A, and lifted the CTQW baseline from 9% → 27% |
 
 **Dual reading of the operator.** The Kirchhoff matrix is simultaneously the CTQW
-Hamiltonian and the Gaussian Network Model operator. Its low-lying eigenvalues are the
+Hamiltonian [Mülken & Blumen 2011] and the Gaussian Network Model operator
+[Bahar et al. 1997]. Its low-lying eigenvalues are the
 slowest coherent frequencies of the quantum walk *and* the slowest vibrational modes of
 the elastic network — the same numbers. ALPS measures how a local binding event retunes
 that shared spectrum.
@@ -250,7 +264,8 @@ conditioning) improve it measurably.
 
 ### 4.4 Nothing localises to 4 Å
 
-DCC ≤ 4 Å success is **0% for every method on every set**; median DCC is 18–33 Å. Note that
+DCC ≤ 4 Å success — the localisation criterion used by `STINGAllo` [Omage et al. 2025] —
+is **0% for every method on every set**; median DCC is 18–33 Å. Note that
 `ctrl_random` posts a *median* DCC of 20.5 Å, so median DCC alone is easy to game by
 predicting near the protein centre — read it together with `hit5`, never alone.
 
@@ -546,6 +561,42 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
   signal — the weak `btb` numbers here are consistent with that warning.
 - Structural data from [RCSB PDB](https://www.rcsb.org/); UniProt mappings via
   [PDBe SIFTS](https://www.ebi.ac.uk/pdbe/).
+
+## References
+
+Every method implemented or discussed above, with the source it comes from. These are
+the papers the design decisions were taken from; the full literature survey behind them,
+with quote-level verified evidence, is in [`docs/`](docs/).
+
+- **[Bahar et al. 1997]** Direct evaluation of thermal fluctuations in proteins using a single-parameter harmonic potential. *Folding and Design*, 1997. doi:[10.1016/s1359-0278(97)00024-2](https://doi.org/10.1016/s1359-0278(97)00024-2)
+- **[Mülken & Blumen 2011]** Continuous-time quantum walks: Models for coherent transport on complex networks. *Physics Reports*, 2011. doi:[10.1016/j.physrep.2011.01.002](https://doi.org/10.1016/j.physrep.2011.01.002)
+- **[Wong et al. 2016]** Laplacian versus adjacency matrix in quantum walk search. *Quantum Information Processing*, 2016. doi:[10.1007/s11128-016-1373-1](https://doi.org/10.1007/s11128-016-1373-1)
+- **[Maier et al. 2019]** Environment-Assisted Quantum Transport in a 10-qubit Network. *Physical Review Letters*, 2019. doi:[10.1103/physrevlett.122.050501](https://doi.org/10.1103/physrevlett.122.050501)
+- **[Atilgan & Atilgan 2009]** Perturbation-Response Scanning Reveals Ligand Entry-Exit Mechanisms of Ferric Binding Protein. *PLoS Computational Biology*, 2009. doi:[10.1371/journal.pcbi.1000544](https://doi.org/10.1371/journal.pcbi.1000544)
+- **[Amor et al. 2016]** Prediction of allosteric sites and mediating interactions through bond-to-bond propensities. 2016. doi:[10.1101/056275](https://doi.org/10.1101/056275)
+- **[Hodges et al. 2018]** Allostery and cooperativity in multimeric proteins: bond-to-bond propensities in ATCase. *Scientific Reports*, 2018. doi:[10.1038/s41598-018-27992-z](https://doi.org/10.1038/s41598-018-27992-z)
+- **[Wu et al. 2022]** Prediction of allosteric sites and signaling: Insights from benchmarking datasets. *Patterns*, 2022. doi:[10.1016/j.patter.2021.100408](https://doi.org/10.1016/j.patter.2021.100408)
+- **[Kumar et al. 2023]** Predicting allosteric pockets in protein biological assemblages. *Bioinformatics*, 2023. doi:[10.1093/bioinformatics/btad275](https://doi.org/10.1093/bioinformatics/btad275)
+- **[Xie et al. 2021]** Uncovering the Dominant Motion Modes of Allosteric Regulation Improves Allosteric Site Prediction. *Journal of Chemical Information and Modeling*, 2021. doi:[10.1021/acs.jcim.1c01267](https://doi.org/10.1021/acs.jcim.1c01267)
+- **[Greener & Sternberg 2015]** AlloPred: prediction of allosteric pockets on proteins using normal mode perturbation analysis. *BMC Bioinformatics*, 2015. doi:[10.1186/s12859-015-0771-1](https://doi.org/10.1186/s12859-015-0771-1)
+- **[Le Guilloux et al. 2009]** Fpocket: An open source platform for ligand pocket detection. *BMC Bioinformatics*, 2009. doi:[10.1186/1471-2105-10-168](https://doi.org/10.1186/1471-2105-10-168)
+- **[Huang et al. 2013]** Allosite: a method for predicting allosteric sites. *Bioinformatics*, 2013. doi:[10.1093/bioinformatics/btt399](https://doi.org/10.1093/bioinformatics/btt399)
+- **[Tian et al. 2023a]** PASSer: fast and accurate prediction of protein allosteric sites. *Nucleic Acids Research*, 2023. doi:[10.1093/nar/gkad303](https://doi.org/10.1093/nar/gkad303)
+- **[Tian et al. 2023b]** PASSerRank: Prediction of allosteric sites with learning to rank. *Journal of Computational Chemistry*, 2023. doi:[10.1002/jcc.27193](https://doi.org/10.1002/jcc.27193)
+- **[Omage et al. 2025]** STINGAllo: a web server for high-throughput prediction of allosteric site-forming residues using internal protein nanoenvironment descriptors. *Briefings in Bioinformatics*, 2025. doi:[10.1093/bib/bbaf424](https://doi.org/10.1093/bib/bbaf424)
+- **[Meller et al. 2023]** Predicting locations of cryptic pockets from single protein structures using the PocketMiner graph neural network. *Nature Communications*, 2023. doi:[10.1038/s41467-023-36699-3](https://doi.org/10.1038/s41467-023-36699-3)
+- **[Dong et al. 2024]** Allo-Allo: Data-efficient prediction of allosteric sites. 2024. doi:[10.1101/2024.09.28.615583](https://doi.org/10.1101/2024.09.28.615583)
+- **[Zhang et al. 2026]** AlloEF: An Ensemble Model for Protein Allosteric Site Identification Based on Transfer Entropy and Energetic Frustration. *The Journal of Physical Chemistry B*, 2026. doi:[10.1021/acs.jpcb.6c00242](https://doi.org/10.1021/acs.jpcb.6c00242)
+- **[Xie et al. 2023]** Coevolution-based prediction of key allosteric residues for protein function regulation. *eLife*, 2023. doi:[10.7554/elife.81850](https://doi.org/10.7554/elife.81850)
+- **[Huang et al. 2010]** ASD: a comprehensive database of allosteric proteins and modulators. *Nucleic Acids Research*, 2010. doi:[10.1093/nar/gkq1022](https://doi.org/10.1093/nar/gkq1022)
+- **[Huang et al. 2015]** ASBench: benchmarking sets for allosteric discovery. *Bioinformatics*, 2015. doi:[10.1093/bioinformatics/btv169](https://doi.org/10.1093/bioinformatics/btv169)
+- **[Zlobin et al. 2019]** CASBench: A Benchmarking Set of Proteins with Annotated Catalytic and Allosteric Sites in Their Structures. *Acta Naturae*, 2019. doi:[10.32607/20758251-2019-11-1-74-80](https://doi.org/10.32607/20758251-2019-11-1-74-80)
+- **[Ai et al. 2026]** A systematic evaluation of protein allosteric site prediction tools with independent datasets. *Journal of Computer-Aided Molecular Design*, 2026. doi:[10.1007/s10822-026-00831-4](https://doi.org/10.1007/s10822-026-00831-4)
+
+Benchmark and evaluation-criterion sources are in the same list:
+`ASD` [Huang et al. 2010], `ASBench` [Huang et al. 2015], `CASBench` [Zlobin et al. 2019] and the `CAPASP`
+apo/holo evaluation [Ai et al. 2026], whose finding that machine-learning predictors
+degrade on apo structures is what makes an apo-only benchmark worth building.
 
 ## License
 
