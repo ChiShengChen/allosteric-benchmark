@@ -169,6 +169,15 @@ that shared spectrum.
 
 ## 4. Results
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/methods-dark.svg">
+  <img alt="Method comparison on the held-out benchmark: top-5 hit rate, permutation significance and ROC-AUC for 22 methods and three trivial controls across 90 family-declustered targets. ALPS leads on top-5 hit rate at 24.4% against 7.8% for the distance control; the CTQW baseline and its variants sit below chance on AUC." src="docs/methods-light.svg" width="100%">
+</picture>
+
+*Orange = trivial controls; dashed line = the random control. The AUC panel diverges from
+0.5 because 0.5 is chance — bars to the left rank true allosteric residues **below**
+background. Regenerate with `python3 scripts/make_figure.py`.*
+
 `sig` = fraction with permutation p < 0.05 · `AUC` = ROC-AUC inside the candidate pool
 (0.5 = chance) · `hit5` = top-5 contains a true allosteric residue.
 
@@ -505,6 +514,7 @@ python3 scripts/diversify.py  --targets data/targets_b   # top-k selection strat
 
 python3 scripts/build_dataset_multimer.py 2694 60        # symmetric-oligomer set
 python3 scripts/multimer_ablation.py                     # readouts where degeneracy exists
+python3 scripts/make_figure.py                           # regenerate the figure
 ```
 
 Scoring your own structure:
@@ -527,7 +537,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
              ablate_readouts.py  cooperative.py  diversify.py
-             build_dataset_multimer.py  multimer_ablation.py
+             build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
@@ -535,6 +545,7 @@ data/
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
 docs/
+  methods-light.svg / methods-dark.svg   the comparison figure above
   RESULTS.zh.md              detailed results write-up (Chinese)
   methods.zh.md              method-by-method notes (Chinese)
   literature-review.zh.md    literature survey behind the method design (Chinese)

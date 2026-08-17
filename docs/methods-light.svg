@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="590" viewBox="0 0 1000 590" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+<rect width="1000" height="590" fill="#fcfcfb"/>
+<text x="16" y="30" font-size="16" font-weight="600" fill="#0b0b0b">Allosteric site prediction from C&#946; coordinates + active site</text>
+<text x="16" y="50" font-size="12" fill="#52514e">Held-out benchmark, 90 family-declustered targets. Sorted by top-5 hit rate. Dashed line = random control.</text>
+<rect x="16" y="64" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="31" y="73" font-size="11.5" fill="#52514e">ALPS (this work)</text>
+<rect x="140.4" y="64" width="10" height="10" rx="2" fill="#6f6e69"/>
+<text x="155.4" y="73" font-size="11.5" fill="#52514e">other methods</text>
+<rect x="245.60000000000002" y="64" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="260.6" y="73" font-size="11.5" fill="#52514e">trivial controls</text>
+<text x="168.0" y="84" font-size="12" font-weight="600" fill="#0b0b0b">top-5 hit rate</text>
+<line x1="168.0" y1="92" x2="168.0" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="229.7" y1="92" x2="229.7" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="291.3" y1="92" x2="291.3" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="353.0" y1="92" x2="353.0" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="414.7" y1="92" x2="414.7" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="200.9" y1="92" x2="200.9" y2="536" stroke="#eb6834" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85"/>
+<rect x="168.0" y="100" width="63.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="236.0" y="109" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">25.6%</text>
+<text x="236.0" y="109" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">25.6%</text>
+<rect x="168.0" y="120" width="60.3" height="11" rx="4" fill="#2a78d6"/>
+<text x="233.3" y="129" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">24.4%</text>
+<text x="233.3" y="129" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">24.4%</text>
+<rect x="168.0" y="140" width="56.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="229.7" y="149" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">23.0%</text>
+<text x="229.7" y="149" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">23.0%</text>
+<rect x="168.0" y="160" width="48.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="221.2" y="169" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">19.5%</text>
+<text x="221.2" y="169" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">19.5%</text>
+<rect x="168.0" y="180" width="42.5" height="11" rx="4" fill="#6f6e69"/>
+<text x="215.5" y="189" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">17.2%</text>
+<text x="215.5" y="189" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">17.2%</text>
+<rect x="168.0" y="200" width="41.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="214.1" y="209" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">16.7%</text>
+<text x="214.1" y="209" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">16.7%</text>
+<rect x="168.0" y="220" width="39.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="212.7" y="229" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">16.1%</text>
+<text x="212.7" y="229" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">16.1%</text>
+<rect x="168.0" y="240" width="32.9" height="11" rx="4" fill="#eb6834"/>
+<text x="205.9" y="249" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">13.3%</text>
+<text x="205.9" y="249" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">13.3%</text>
+<rect x="168.0" y="260" width="27.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="200.7" y="269" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">11.2%</text>
+<text x="200.7" y="269" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">11.2%</text>
+<rect x="168.0" y="280" width="27.4" height="11" rx="4" fill="#6f6e69"/>
+<text x="200.4" y="289" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">11.1%</text>
+<text x="200.4" y="289" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">11.1%</text>
+<rect x="168.0" y="300" width="24.7" height="11" rx="4" fill="#eb6834"/>
+<text x="197.7" y="309" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">10.0%</text>
+<text x="197.7" y="309" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">10.0%</text>
+<rect x="168.0" y="320" width="24.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="197.7" y="329" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">10.0%</text>
+<text x="197.7" y="329" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">10.0%</text>
+<rect x="168.0" y="340" width="21.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="194.9" y="349" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<text x="194.9" y="349" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<rect x="168.0" y="360" width="19.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="192.2" y="369" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="192.2" y="369" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<rect x="168.0" y="380" width="19.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="192.2" y="389" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="192.2" y="389" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<rect x="168.0" y="400" width="19.2" height="11" rx="4" fill="#eb6834"/>
+<text x="192.2" y="409" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="192.2" y="409" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<rect x="168.0" y="420" width="13.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="186.7" y="429" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">5.6%</text>
+<text x="186.7" y="429" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">5.6%</text>
+<rect x="168.0" y="440" width="11.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="184.1" y="449" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">4.5%</text>
+<text x="184.1" y="449" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">4.5%</text>
+<rect x="168.0" y="460" width="11.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="184.0" y="469" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">4.4%</text>
+<text x="184.0" y="469" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">4.4%</text>
+<rect x="168.0" y="480" width="11.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="184.0" y="489" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">4.4%</text>
+<text x="184.0" y="489" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">4.4%</text>
+<rect x="168.0" y="500" width="8.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="181.2" y="509" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">3.3%</text>
+<text x="181.2" y="509" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">3.3%</text>
+<rect x="168.0" y="520" width="5.5" height="11" rx="4" fill="#6f6e69"/>
+<text x="178.5" y="529" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">2.2%</text>
+<text x="178.5" y="529" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">2.2%</text>
+<text x="448.66666666666663" y="84" font-size="12" font-weight="600" fill="#0b0b0b">permutation significance</text>
+<line x1="448.7" y1="92" x2="448.7" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="510.3" y1="92" x2="510.3" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="572.0" y1="92" x2="572.0" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="633.7" y1="92" x2="633.7" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="695.3" y1="92" x2="695.3" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="470.6" y1="92" x2="470.6" y2="536" stroke="#eb6834" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85"/>
+<rect x="448.7" y="100" width="115.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="568.8" y="109" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">46.7%</text>
+<text x="568.8" y="109" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">46.7%</text>
+<rect x="448.7" y="120" width="120.6" height="11" rx="4" fill="#2a78d6"/>
+<text x="574.3" y="129" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">48.9%</text>
+<text x="574.3" y="129" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">48.9%</text>
+<rect x="448.7" y="140" width="116.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="569.9" y="149" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">47.1%</text>
+<text x="569.9" y="149" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">47.1%</text>
+<rect x="448.7" y="160" width="113.4" height="11" rx="4" fill="#6f6e69"/>
+<text x="567.1" y="169" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">46.0%</text>
+<text x="567.1" y="169" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">46.0%</text>
+<rect x="448.7" y="180" width="124.8" height="11" rx="4" fill="#6f6e69"/>
+<text x="578.4" y="189" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">50.6%</text>
+<text x="578.4" y="189" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">50.6%</text>
+<rect x="448.7" y="200" width="43.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="497.5" y="209" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">17.8%</text>
+<text x="497.5" y="209" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">17.8%</text>
+<rect x="448.7" y="220" width="102.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="555.7" y="229" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">41.4%</text>
+<text x="555.7" y="229" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">41.4%</text>
+<rect x="448.7" y="240" width="21.9" height="11" rx="4" fill="#eb6834"/>
+<text x="475.6" y="249" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<text x="475.6" y="249" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<rect x="448.7" y="260" width="105.3" height="11" rx="4" fill="#6f6e69"/>
+<text x="559.0" y="269" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">42.7%</text>
+<text x="559.0" y="269" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">42.7%</text>
+<rect x="448.7" y="280" width="41.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="494.8" y="289" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">16.7%</text>
+<text x="494.8" y="289" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">16.7%</text>
+<rect x="448.7" y="300" width="52.1" height="11" rx="4" fill="#eb6834"/>
+<text x="505.7" y="309" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">21.1%</text>
+<text x="505.7" y="309" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">21.1%</text>
+<rect x="448.7" y="320" width="32.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="486.6" y="329" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">13.3%</text>
+<text x="486.6" y="329" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">13.3%</text>
+<rect x="448.7" y="340" width="30.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="483.8" y="349" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">12.2%</text>
+<text x="483.8" y="349" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">12.2%</text>
+<rect x="448.7" y="360" width="30.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="483.8" y="369" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">12.2%</text>
+<text x="483.8" y="369" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">12.2%</text>
+<rect x="448.7" y="380" width="21.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="475.6" y="389" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<text x="475.6" y="389" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<rect x="448.7" y="400" width="112.4" height="11" rx="4" fill="#eb6834"/>
+<text x="566.0" y="409" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">45.6%</text>
+<text x="566.0" y="409" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">45.6%</text>
+<rect x="448.7" y="420" width="49.3" height="11" rx="4" fill="#6f6e69"/>
+<text x="503.0" y="429" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">20.0%</text>
+<text x="503.0" y="429" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">20.0%</text>
+<rect x="448.7" y="440" width="13.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="467.5" y="449" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">5.6%</text>
+<text x="467.5" y="449" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">5.6%</text>
+<rect x="448.7" y="460" width="19.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="472.9" y="469" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="472.9" y="469" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<rect x="448.7" y="480" width="19.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="472.9" y="489" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="472.9" y="489" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<rect x="448.7" y="500" width="21.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="475.6" y="509" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<text x="475.6" y="509" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">8.9%</text>
+<rect x="448.7" y="520" width="19.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="472.9" y="529" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="472.9" y="529" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">7.8%</text>
+<text x="729.3333333333333" y="84" font-size="12" font-weight="600" fill="#0b0b0b">ROC-AUC vs chance</text>
+<line x1="729.3" y1="92" x2="729.3" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="791.0" y1="92" x2="791.0" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="914.3" y1="92" x2="914.3" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="976.0" y1="92" x2="976.0" y2="536" stroke="#e6e5e0" stroke-width="1"/>
+<line x1="852.7" y1="92" x2="852.7" y2="536" stroke="#8a8981" stroke-width="1.25"/>
+<text x="852.7" y="551" font-size="10" text-anchor="middle" fill="#8a8981">0.5 = chance</text>
+<text x="729.3" y="551" font-size="10" fill="#8a8981">worse</text>
+<text x="976.0" y="551" font-size="10" text-anchor="end" fill="#8a8981">better</text>
+<rect x="852.7" y="100" width="81.2" height="11" rx="4" fill="#6f6e69"/>
+<text x="938.9" y="109" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.584</text>
+<text x="938.9" y="109" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.584</text>
+<rect x="852.7" y="120" width="99.4" height="11" rx="4" fill="#2a78d6"/>
+<text x="957.1" y="129" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.603</text>
+<text x="957.1" y="129" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.603</text>
+<rect x="852.7" y="140" width="90.3" height="11" rx="4" fill="#6f6e69"/>
+<text x="947.9" y="149" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.593</text>
+<text x="947.9" y="149" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.593</text>
+<rect x="852.7" y="160" width="46.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="903.6" y="169" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.547</text>
+<text x="903.6" y="169" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.547</text>
+<rect x="852.7" y="180" width="62.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="919.8" y="189" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.564</text>
+<text x="919.8" y="189" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.564</text>
+<rect x="819.0" y="200" width="33.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="814.0" y="209" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.465</text>
+<text x="814.0" y="209" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.465</text>
+<rect x="852.7" y="220" width="48.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="905.7" y="229" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.550</text>
+<text x="905.7" y="229" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.550</text>
+<rect x="826.4" y="240" width="26.2" height="11" rx="4" fill="#eb6834"/>
+<text x="821.4" y="249" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.473</text>
+<text x="821.4" y="249" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.473</text>
+<rect x="852.7" y="260" width="40.4" height="11" rx="4" fill="#6f6e69"/>
+<text x="898.0" y="269" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.542</text>
+<text x="898.0" y="269" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.542</text>
+<rect x="796.7" y="280" width="56.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="791.7" y="289" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.442</text>
+<text x="791.7" y="289" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.442</text>
+<rect x="819.8" y="300" width="32.8" height="11" rx="4" fill="#eb6834"/>
+<text x="814.8" y="309" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.466</text>
+<text x="814.8" y="309" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.466</text>
+<rect x="810.9" y="320" width="41.8" height="11" rx="4" fill="#6f6e69"/>
+<text x="805.9" y="329" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.457</text>
+<text x="805.9" y="329" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.457</text>
+<rect x="852.7" y="340" width="6.9" height="11" rx="4" fill="#6f6e69"/>
+<text x="864.6" y="349" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.507</text>
+<text x="864.6" y="349" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.507</text>
+<rect x="749.9" y="360" width="102.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="744.9" y="369" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.394</text>
+<text x="744.9" y="369" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.394</text>
+<rect x="771.4" y="380" width="81.3" height="11" rx="4" fill="#6f6e69"/>
+<text x="766.4" y="389" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.416</text>
+<text x="766.4" y="389" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.416</text>
+<rect x="852.7" y="400" width="110.1" height="11" rx="4" fill="#eb6834"/>
+<text x="967.8" y="409" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.614</text>
+<text x="967.8" y="409" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.614</text>
+<rect x="852.7" y="420" width="1.5" height="11" rx="4" fill="#6f6e69"/>
+<text x="858.5" y="429" font-size="10.5" text-anchor="start" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.501</text>
+<text x="858.5" y="429" font-size="10.5" text-anchor="start" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.501</text>
+<rect x="755.7" y="440" width="97.0" height="11" rx="4" fill="#6f6e69"/>
+<text x="750.7" y="449" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.400</text>
+<text x="750.7" y="449" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.400</text>
+<rect x="770.9" y="460" width="81.7" height="11" rx="4" fill="#6f6e69"/>
+<text x="765.9" y="469" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.416</text>
+<text x="765.9" y="469" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.416</text>
+<rect x="770.2" y="480" width="82.5" height="11" rx="4" fill="#6f6e69"/>
+<text x="765.2" y="489" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.415</text>
+<text x="765.2" y="489" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.415</text>
+<rect x="745.2" y="500" width="107.4" height="11" rx="4" fill="#6f6e69"/>
+<text x="740.2" y="509" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.389</text>
+<text x="740.2" y="509" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.389</text>
+<rect x="763.6" y="520" width="89.1" height="11" rx="4" fill="#6f6e69"/>
+<text x="758.6" y="529" font-size="10.5" text-anchor="end" fill="none" stroke="#fcfcfb" stroke-width="2.5" stroke-linejoin="round">0.408</text>
+<text x="758.6" y="529" font-size="10.5" text-anchor="end" fill="#8a8981" stroke="none" stroke-width="2.5" stroke-linejoin="round">0.408</text>
+<text x="158" y="109" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">ALPS_noresid</text>
+<text x="158" y="129" font-size="11" text-anchor="end" font-weight="600" fill="#0b0b0b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">ALPS</text>
+<text x="158" y="149" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">apop+dist</text>
+<text x="158" y="169" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">apop+corrsite</text>
+<text x="158" y="189" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">apop</text>
+<text x="158" y="209" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">btb</text>
+<text x="158" y="229" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc+apop</text>
+<text x="158" y="249" font-size="11" text-anchor="end" font-weight="400" fill="#0b0b0b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">control: random</text>
+<text x="158" y="269" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">cpr_classical</text>
+<text x="158" y="289" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">corrsite</text>
+<text x="158" y="309" font-size="11" text-anchor="end" font-weight="400" fill="#0b0b0b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">control: burial</text>
+<text x="158" y="329" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc_distcorr</text>
+<text x="158" y="349" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">enaqt</text>
+<text x="158" y="369" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">btb_raw</text>
+<text x="158" y="389" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">ctqw_only</text>
+<text x="158" y="409" font-size="11" text-anchor="end" font-weight="400" fill="#0b0b0b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">control: distance</text>
+<text x="158" y="429" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">prs</text>
+<text x="158" y="449" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qpr_coherent</text>
+<text x="158" y="469" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc (CTQW baseline)</text>
+<text x="158" y="489" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc_degseed</text>
+<text x="158" y="509" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc_normlap</text>
+<text x="158" y="529" font-size="11" text-anchor="end" font-weight="400" fill="#52514e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">qasc+btb</text>
+<text x="16" y="574" font-size="10.5" fill="#8a8981">Labels are proxy annotations; the benchmark carries a distance bias (see README &#167;9). ALPS hyperparameters were tuned on a separate 11-target set.</text>
+</svg>

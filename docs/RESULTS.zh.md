@@ -12,6 +12,14 @@
 
 ## 1. 總表
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="methods-dark.svg">
+  <img alt="22 個方法在留出 benchmark 上的比較" src="methods-light.svg" width="100%">
+</picture>
+
+*橘色為平庸對照,虛線為亂數對照。AUC 面板以 0.5(隨機)為基準發散——向左表示把真異位殘基排在背景**之下**。*
+
+
 `sig` = 置換檢定 p<0.05 的比例;`AUC` = 候選池內 ROC-AUC(0.5=隨機);`hit5` = top-5 命中率。
 **tier-B 欄是唯一未被調參污染的數字,應以它為準。**
 
