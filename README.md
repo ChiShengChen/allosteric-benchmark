@@ -29,9 +29,11 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   Kirchhoff eigenvalues, z-score against distance — beats every control on the held-out
   set, and its margin is largest at *localisation*: **24.4% top-5 hit rate** versus 7.8%
   for the distance control (3.1×) and 17.2% for the strongest published-method port.
-- Within one identical perturb-and-read framework, **explicitly coherent (quantum)
-  readouts performed worse than the spectral and classical ones**. This repo reports that
-  plainly and claims no quantum advantage.
+- **Five different places to put a quantum walk have now been measured, and all five
+  lose** to a plain eigenvalue-shift readout: coherent transfer amplitude, coherent
+  transfer inside the perturbation framework, ENAQT dephasing, degeneracy structure, and
+  eigenvector content. Section 5 records where a quantum walk could still plausibly sit —
+  and it is not in the physics readout.
 - **No method reaches the DCC ≤ 4 Å localisation criterion on any target.** Enrichment
   significance and pointing at the right place are different problems, and contact-graph
   methods currently solve only the first.
@@ -187,10 +189,12 @@ the very top of it.
 The tier-A → tier-B drop (90.9% → 48.9%) has two causes and both should be stated:
 hyperparameters were selected on tier-A, and tier-A's labels are higher quality.
 
-### 4.2 Kernel ablation — the coherent readout loses
+### 4.2 Ablations — which observable actually carries the signal
 
-Identical graph, identical perturbation, identical readout location; only the propagator
-changes:
+Two ablations, both holding the graph, the perturbation and the distance
+conditioning fixed and varying only what is read out.
+
+**(a) The propagator.** Identical perturbation and readout location; only the kernel changes:
 
 | Readout | tier-A sig / AUC |
 |---|---|
@@ -198,6 +202,20 @@ changes:
 | Finite-window coherent transfer | 9.1% / 0.358 |
 | Classical diffusion kernel | 27.3% / 0.596 |
 | **Low-lying spectral shift (ALPS)** | **90.9% / 0.757** |
+
+**(b) The spectral quantity.** Given that a spectral readout wins, *which* spectral
+quantity? `scripts/ablate_readouts.py`, tier-A, K = 3 modes throughout:
+
+| Readout | sig | median p | AUC | hit5 |
+|---|---|---|---|---|
+| **`dlam` — eigenvalue shift (ALPS)** | **90.9%** | **0.0003** | **0.757** | **36.4%** |
+| `dpart` — change in active-site participation in the low modes | 63.6% | 0.0196 | 0.682 | 18.2% |
+| `dgap` — change in level *spacings* (degeneracy structure) | 54.5% | 0.0013 | 0.660 | 18.2% |
+| `dipr` — change in mode localisation (inverse participation ratio) | 36.4% | 0.0865 | 0.637 | 9.1% |
+
+The last three are the *quantum-specific* quantities: degeneracy structure and
+eigenvector content, which is what would carry the signal if interference were doing
+the work. Plain eigenvalue magnitude beats all of them.
 
 ### 4.3 On the CTQW baseline
 
@@ -228,7 +246,60 @@ predicting near the protein centre — read it together with `hit5`, never alone
 
 ---
 
-## 5. Limitations
+## 5. Where a quantum walk can and cannot sit in this pipeline
+
+Because the project started from a quantum-walk method, it is worth stating precisely
+what was tested and what remains open. Five insertion points have now been measured and
+all five failed:
+
+| Insertion point | Result |
+|---|---|
+| Absolute CTQW transfer amplitude as the score (QASC's design) | Fails — the score correlates −0.60 to −0.71 with distance-to-anchor; it is largely a proximity ranker |
+| Coherent transfer as the readout inside the perturbation framework | 9.1% significant, versus 90.9% for the spectral readout |
+| ENAQT / dephasing-assisted transport | γ swept from 0 to 3·J_max with the rate calibrated to the hopping scale; no optimum appears, results stay at chance |
+| Degeneracy structure (level spacings) under perturbation | 54.5%, versus 90.9% for plain eigenvalue shift |
+| Eigenvector content (active-site participation, mode IPR) | 63.6% and 36.4% |
+
+The pattern is consistent: **every observable that depends on coherent transfer
+probability or eigenvector structure loses; only eigenvalue magnitude wins.** A plausible
+reading is that residue contact graphs lack the symmetry needed to produce meaningful
+eigenvalue degeneracies, and interference effects need degeneracies to appear at all —
+which is also what the CTQW literature predicts for long-time transfer.
+
+**Where a quantum walk legitimately already sits.** The λ_k that ALPS reads *are* the
+eigenvalues of the CTQW Hamiltonian — the slowest coherent frequencies of the walk. "How
+does ligand binding retune the walk's low-lying spectrum" is a fair description of the
+method. It is equally a description of the Gaussian Network Model's slowest vibrational
+modes, so this is a *framing*, not an advantage, and this repository does not present it
+as one.
+
+**What remains genuinely untested**, in descending order of how promising it looks:
+
+1. **Combinatorial selection rather than physical propagation.** Single-residue
+   perturbation is easy classically — this repo already does it. The biological question
+   is cooperative: which *set* of k residues, stiffened together, maximally perturbs the
+   active site? That is C(N, k) — about 2 × 10¹⁰ subsets for N = 300, k = 5 — with an
+   eigendecomposition per evaluation, so classically it is a greedy approximation at best.
+   It maps directly onto a QUBO/Ising form. This puts quantum on a subproblem that is
+   genuinely combinatorially hard, instead of on a physics readout where the measurements
+   above show classical does better.
+2. **Symmetric multimers.** Every target here is a single chain by construction, and
+   single chains are exactly where eigenvalue degeneracies are absent. Symmetric
+   oligomers are where degeneracy is real and where allostery *is* symmetry breaking. The
+   negative results above do not transfer to that regime because it was never tested.
+3. **Algorithmic speedup rather than accuracy.** ALPS needs N eigendecompositions, O(N⁴).
+   Estimating spectral shifts via quantum phase estimation on the walk operator would not
+   need full diagonalisation. This is a scaling claim, not an accuracy claim, and it is
+   the one framing that survives every negative result above.
+
+**Not worth further tuning:** more variants of the coherent readout (different time
+scales, initial states, Hamiltonian normalisations). Five have been tried and they land
+between chance and 27%, against 91% for the spectral readout. That gap is not a
+hyperparameter problem.
+
+---
+
+## 6. Limitations
 
 1. **Proxy labels.** `y` = "a drug-like molecule binds here, ≥ 8 Å from the catalytic site",
    not an experimentally validated allosteric site.
@@ -245,7 +316,7 @@ predicting near the protein centre — read it together with `hit5`, never alone
 
 ---
 
-## 6. Reproduce
+## 7. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -256,6 +327,8 @@ python3 scripts/build_dataset_b.py 9000 130   # tier-B  (resumable)
 python3 scripts/evaluate.py --targets data/targets        # tier-A
 python3 scripts/evaluate.py --targets data/targets_b      # tier-B (held out)
 python3 scripts/evaluate.py --targets data/qasc_targets   # QASC's own three
+
+python3 scripts/ablate_readouts.py                       # which observable carries the signal
 ```
 
 Scoring your own structure:
@@ -271,11 +344,11 @@ scores = alps_scores(cb, anchor)          # (N,) higher = more allosteric
 
 ---
 
-## 7. Repository layout
+## 8. Repository layout
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py
-scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
+scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  ablate_readouts.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
@@ -295,7 +368,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 8. Credits
+## 9. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)
