@@ -1,12 +1,12 @@
 [
  {
-  "pdb": "1QOQ",
+  "pdb": "1CX9",
   "chain": "A+B",
-  "ligand": "IGP",
-  "n": 648,
-  "n_anchor": 19,
-  "n_pos": 16,
-  "sep": 20.45143987595983,
+  "ligand": "NHP",
+  "n": 651,
+  "n_anchor": 21,
+  "n_pos": 21,
+  "sep": 20.71341917694904,
   "uniprot": [
    "P00929",
    "P0A2K1"
@@ -14,198 +14,187 @@
   "n_chains": 2
  },
  {
-  "pdb": "2OLC",
+  "pdb": "1CS4",
+  "chain": "A+B+C",
+  "ligand": "101",
+  "n": 708,
+  "n_anchor": 27,
+  "n_pos": 17,
+  "sep": 31.324179574252227,
+  "uniprot": [
+   "P04896",
+   "P26769",
+   "P30803"
+  ],
+  "n_chains": 3
+ },
+ {
+  "pdb": "3GFZ",
   "chain": "A+B",
-  "ligand": "CPS",
-  "n": 752,
+  "ligand": "C2E",
+  "n": 787,
+  "n_anchor": 34,
+  "n_pos": 25,
+  "sep": 23.461120902463296,
+  "uniprot": [
+   "A6T8V8"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "3U6B",
+  "chain": "A+B+C+D",
+  "ligand": "8BB",
+  "n": 751,
+  "n_anchor": 30,
+  "n_pos": 9,
+  "sep": 43.95759332584076,
+  "uniprot": [
+   "P0CE47",
+   "Q7M0J8"
+  ],
+  "n_chains": 4
+ },
+ {
+  "pdb": "3ZGF",
+  "chain": "A+B",
+  "ligand": "IUG",
+  "n": 572,
+  "n_anchor": 15,
+  "n_pos": 21,
+  "sep": 46.59161317232963,
+  "uniprot": [
+   "P16442"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4AVC",
+  "chain": "A+B",
+  "ligand": "CMP",
+  "n": 652,
+  "n_anchor": 51,
+  "n_pos": 15,
+  "sep": 24.106195261799407,
+  "uniprot": [
+   "O05581"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4CJX",
+  "chain": "A+B",
+  "ligand": "9L9",
+  "n": 594,
+  "n_anchor": 27,
+  "n_pos": 22,
+  "sep": 22.02356224592198,
+  "uniprot": [
+   "Q57WP0"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4CVK",
+  "chain": "A+B",
+  "ligand": "API",
+  "n": 439,
+  "n_anchor": 14,
+  "n_pos": 9,
+  "sep": 12.490740410400017,
+  "uniprot": [
+   "Q9HVZ7"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4FGZ",
+  "chain": "A+B",
+  "ligand": "CQA",
+  "n": 516,
+  "n_anchor": 45,
+  "n_pos": 13,
+  "sep": 8.297857675328014,
+  "uniprot": [
+   "Q8IDQ9"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4HNB",
+  "chain": "A+B",
+  "ligand": "FNR",
+  "n": 353,
+  "n_anchor": 21,
+  "n_pos": 22,
+  "sep": 28.345249425609225,
+  "uniprot": [
+   "M1E1F8"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4IFC",
+  "chain": "A+B",
+  "ligand": "PTR",
+  "n": 656,
   "n_anchor": 38,
   "n_pos": 7,
-  "sep": 29.190677792747465,
+  "sep": 10.670280127531798,
   "uniprot": [
-   "O31663"
+   "Q13523"
   ],
   "n_chains": 2
  },
  {
-  "pdb": "2F17",
+  "pdb": "4II9",
   "chain": "A+B",
-  "ligand": "PYI",
-  "n": 498,
-  "n_anchor": 20,
+  "ligand": "A9Z",
+  "n": 339,
+  "n_anchor": 12,
+  "n_pos": 16,
+  "sep": 8.416741233993118,
+  "uniprot": [
+   "Q9EY50"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4K43",
+  "chain": "A+B",
+  "ligand": "1PO",
+  "n": 720,
+  "n_anchor": 39,
+  "n_pos": 16,
+  "sep": 9.256232602954617,
+  "uniprot": [
+   "P68135"
+  ],
+  "n_chains": 2
+ },
+ {
+  "pdb": "4KP7",
+  "chain": "A+B",
+  "ligand": "1UQ",
+  "n": 811,
+  "n_anchor": 27,
   "n_pos": 17,
-  "sep": 9.452750393404031,
+  "sep": 27.39570468157372,
   "uniprot": [
-   "Q9R0M5"
+   "O96693"
   ],
   "n_chains": 2
  },
  {
-  "pdb": "2G70",
+  "pdb": "4MO2",
   "chain": "A+B",
-  "ligand": "HNT",
-  "n": 526,
-  "n_anchor": 47,
-  "n_pos": 6,
-  "sep": 14.983579478882874,
+  "ligand": "FDA",
+  "n": 728,
+  "n_anchor": 39,
+  "n_pos": 38,
+  "sep": 22.5067064894,
   "uniprot": [
-   "P11086"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "2QE6",
-  "chain": "A+B",
-  "ligand": "NEP",
-  "n": 530,
-  "n_anchor": 41,
-  "n_pos": 8,
-  "sep": 10.404182139889707,
-  "uniprot": [
-   "Q47KX2"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "2WK9",
-  "chain": "A+B",
-  "ligand": "PLG",
-  "n": 762,
-  "n_anchor": 18,
-  "n_pos": 21,
-  "sep": 8.465531643080663,
-  "uniprot": [
-   "Q9KM65"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "2YY8",
-  "chain": "A+B",
-  "ligand": "MTA",
-  "n": 348,
-  "n_anchor": 22,
-  "n_pos": 17,
-  "sep": 8.620586638970693,
-  "uniprot": [
-   "O58214"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "2ZW7",
-  "chain": "A+B",
-  "ligand": "BLM",
-  "n": 586,
-  "n_anchor": 24,
-  "n_pos": 34,
-  "sep": 21.723295928564802,
-  "uniprot": [
-   "Q53796"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "3CI5",
-  "chain": "A+G",
-  "ligand": "PTR",
-  "n": 492,
-  "n_anchor": 24,
-  "n_pos": 13,
-  "sep": 8.024784794622223,
-  "uniprot": [
-   "P06396",
-   "P07830"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "1KZ8",
-  "chain": "A+F",
-  "ligand": "PFE",
-  "n": 638,
-  "n_anchor": 61,
-  "n_pos": 12,
-  "sep": 10.728554189638036,
-  "uniprot": [
-   "P00636"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "9IEB",
-  "chain": "A+B",
-  "ligand": "VSL",
-  "n": 694,
-  "n_anchor": 60,
-  "n_pos": 7,
-  "sep": 11.81676986320712,
-  "uniprot": [
-   "P49366"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "1KRU",
-  "chain": "A+B+C",
-  "ligand": "IPT",
-  "n": 603,
-  "n_anchor": 75,
-  "n_pos": 5,
-  "sep": 9.796001531237122,
-  "uniprot": [
-   "P07464"
-  ],
-  "n_chains": 3
- },
- {
-  "pdb": "1H1T",
-  "chain": "A+B",
-  "ligand": "PNS",
-  "n": 315,
-  "n_anchor": 16,
-  "n_pos": 15,
-  "sep": 13.796585012241255,
-  "uniprot": [
-   "P0A6I6"
-  ],
-  "n_chains": 2
- },
- {
-  "pdb": "5EGL",
-  "chain": "A+B+C",
-  "ligand": "BCO",
-  "n": 492,
-  "n_anchor": 23,
-  "n_pos": 26,
-  "sep": 10.909738814472146,
-  "uniprot": [
-   "A0A0H3K033"
-  ],
-  "n_chains": 3
- },
- {
-  "pdb": "6YC7",
-  "chain": "A+B+C+D+E+F",
-  "ligand": "A5O",
-  "n": 605,
-  "n_anchor": 34,
-  "n_pos": 9,
-  "sep": 13.109524552782226,
-  "uniprot": [
-   "H7C694"
-  ],
-  "n_chains": 6
- },
- {
-  "pdb": "3RSQ",
-  "chain": "A+B",
-  "ligand": "NAX",
-  "n": 496,
-  "n_anchor": 21,
-  "n_pos": 19,
-  "sep": 24.622010092598046,
-  "uniprot": [
-   "Q9X024"
+   "Q0P8H5"
   ],
   "n_chains": 2
  }

@@ -9,7 +9,7 @@ splits the targets by whether the chains really are symmetric copies (Kabsch
 RMSD between equal-length chains).
 """
 from __future__ import annotations
-import argparse, collections, glob, os, sys, warnings
+import argparse, collections, glob, json, os, sys, warnings
 import numpy as np
 warnings.filterwarnings("ignore")
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,8 +70,14 @@ def main():
     ap.add_argument("--targets", default=os.path.join(HERE, "data", "targets_multimer"))
     ap.add_argument("--max-n", type=int, default=560)
     ap.add_argument("--sym-cut", type=float, default=1.0)
+    ap.add_argument("--cache", default=os.path.join(HERE, "data", "multimer_readouts.json"))
     a = ap.parse_args()
 
+    # per-target cache: the readouts are the expensive part (N eigendecompositions
+    # each), so a run that is interrupted does not lose the work
+    cache = {}
+    if os.path.exists(a.cache):
+        cache = json.load(open(a.cache))
     groups = {"symmetric": collections.defaultdict(list),
               "unverified": collections.defaultdict(list)}
     deg = {"symmetric": [], "unverified": []}
@@ -88,13 +94,23 @@ def main():
         if bg.sum() < max(3, int(y.sum())):
             continue
         dist = min_dist_to_anchor(cb, anchor)
-        deg[grp].append(degeneracy(cb))
-        R = readouts(cb, anchor)
-        for key, v in R.items():
-            s = pocket_smooth(rank_percentile(distance_zscore(v, dist, pool)), A)
-            groups[grp][key].append((permutation_p(y, s, bg), auc_in_pool(y, s, pool)))
-        print(f"  {os.path.basename(f):16s} N={len(cb):4d} "
-              f"RMSD={'n/a' if r is None else f'{r:.2f}'} -> {grp}", flush=True)
+        name = os.path.basename(f)
+        if name in cache:
+            rec = cache[name]
+        else:
+            R = readouts(cb, anchor)
+            rec = {"deg": degeneracy(cb)}
+            for key, v in R.items():
+                sm = pocket_smooth(rank_percentile(distance_zscore(v, dist, pool)), A)
+                rec[key] = [permutation_p(y, sm, bg), auc_in_pool(y, sm, pool)]
+            cache[name] = rec
+            json.dump(cache, open(a.cache, "w"))
+        deg[grp].append(rec["deg"])
+        for key in ("dlam", "dgap", "dpart", "dipr"):
+            groups[grp][key].append(tuple(rec[key]))
+        print(f"  {name:16s} N={len(cb):4d} "
+              f"RMSD={'n/a' if r is None else f'{r:.2f}'} -> {grp}"
+              f"{' (cached)' if name in cache else ''}", flush=True)
 
     for grp in ("symmetric", "unverified"):
         rows = groups[grp]

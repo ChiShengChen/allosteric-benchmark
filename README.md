@@ -29,8 +29,8 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   Kirchhoff eigenvalues, z-score against distance — beats every control on the held-out
   set, and its margin is largest at *localisation*: **24.4% top-5 hit rate** versus 7.8%
   for the distance control (3.1×) and 17.2% for the strongest published-method port.
-- **Five different places to put a quantum walk have now been measured, and all five
-  lose** to a plain eigenvalue-shift readout: coherent transfer amplitude, coherent
+- **Every place to put a quantum walk that was tested here loses** to a plain
+  eigenvalue-shift readout: coherent transfer amplitude, coherent
   transfer inside the perturbation framework, ENAQT dephasing, degeneracy structure, and
   eigenvector content. Section 5 records where a quantum walk could still plausibly sit —
   and it is not in the physics readout.
@@ -40,10 +40,11 @@ Everything here is reproducible from public data with `numpy` + `scipy`.
   exactly, and the optimum carries no biological benefit over random selection.
 - The control that beat it is trivial and real: **shortlist by score, then spread
   out**. Held-out top-5 hit rate 24.4% → **35.6%**, no QUBO and no quantum.
-- One quantum-specific observable finally wins somewhere: in **verified symmetric
-  oligomers**, where eigenvalue near-degeneracies are enriched, the degeneracy-sensitive
-  readout beats the plain eigenvalue shift (100% vs 75% significant, AUC 0.731 vs 0.635)
-  while losing on single chains. n = 4 — a lead, not a result. Section 8.
+- **Seven** places to put a quantum walk have now been measured and all seven lose,
+  including the last mechanism-backed one: symmetric multimers do enrich spectral
+  degeneracy (6.5% vs 3.1% of near-degenerate gaps), but the degeneracy-sensitive
+  readout still loses there. That result reversed when the symmetric group went from
+  n = 4 to n = 29 — section 8 keeps both readings.
 - **No method reaches the DCC ≤ 4 Å localisation criterion** [Omage et al. 2025] **on any
   target.** Enrichment
   significance and pointing at the right place are different problems, and contact-graph
@@ -294,6 +295,7 @@ all five failed:
 | Degeneracy structure (level spacings) under perturbation | 54.5%, versus 90.9% for plain eigenvalue shift |
 | Eigenvector content (active-site participation, mode IPR) | 63.6% and 36.4% |
 | **Cooperative site selection as a QUBO** (section 6) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
+| **Degeneracy-sensitive readouts on symmetric multimers** (section 8) | Symmetry really does enrich near-degeneracies (6.5% vs 3.1%), but the degeneracy-sensitive readout still loses to the plain eigenvalue shift there, and is marginally worse than in the asymmetric group |
 
 **Where a quantum walk legitimately already sits.** The λ_k that ALPS reads *are* the
 eigenvalues of the CTQW Hamiltonian — the slowest coherent frequencies of the walk. "How
@@ -313,11 +315,10 @@ one is not about accuracy at all:**
    it. Estimating spectral shifts by quantum phase estimation on the walk operator would
    not require full diagonalisation. This is the one framing that survives everything
    measured here, precisely because it never claims better predictions.
-2. **Symmetric multimers — now tested, and the one lead that survived.** Section 8 has
-   the result: degeneracy really is enriched in verified symmetric oligomers, and the
-   degeneracy-sensitive readout beats the plain eigenvalue shift there while losing
-   everywhere else. On n = 4 targets. That is a lead worth powering properly, not a
-   result.
+2. ~~Symmetric multimers.~~ **Tested and closed** — section 8. Symmetry does enrich
+   spectral degeneracy, but not enough for an interference-dependent readout to win
+   there. This was the last mechanism-backed candidate, and only the cost argument
+   above now remains.
 
 **Not worth further tuning:** more variants of the coherent readout (different time
 scales, initial states, Hamiltonian normalisations). Five have been tried and they land
@@ -428,51 +429,61 @@ geometry, no QUBO and no quantum. It is exposed as `alps_select()`.
 
 ---
 
-## 8. Symmetric multimers: the one place a quantum-specific observable wins
+## 8. Symmetric multimers: the hypothesis, and why it failed
 
-Section 5 listed symmetric oligomers as the last untested regime, on the reasoning
-that every interference-dependent observable failed on single chains because single
-chains have no eigenvalue degeneracies — and interference needs degeneracies. That
-is now tested. `scripts/build_dataset_multimer.py` builds the benchmark keeping the
+Section 5 predicted that interference-dependent observables failed on single chains
+because single chains have no eigenvalue degeneracies — and interference needs
+degeneracies. Symmetric oligomers are the regime where that premise differs, so this
+tests it there. `scripts/build_dataset_multimer.py` builds the benchmark keeping the
 whole assembly as one graph; `scripts/multimer_ablation.py` re-runs the readout
-ablation there and splits targets by whether the chains really are symmetric copies
-(Kabsch RMSD between chains, aligned on shared author residue numbers).
+ablation and splits targets by whether the chains really are symmetric copies (Kabsch
+RMSD, aligned on shared author residue numbers).
 
-**First: is degeneracy actually enriched?** Fraction of relative gaps below 1% among
-the 20 lowest non-zero Kirchhoff eigenvalues:
+**The premise holds: degeneracy really is enriched by symmetry.**
 
-| structures | n | gaps < 1% | gaps < 5% | median gap |
-|---|---|---|---|---|
-| single chains (tier-B) | 90 | 3.6% | 38.7% | 7.0% |
-| confirmed symmetric oligomers (chain RMSD < 1 Å) | 26 | **6.3%** | 44.1% | 5.8% |
-
-Near-degenerate pairs roughly double. Modest, but real — and it does **not** show up
-if symmetric and non-symmetric multi-chain structures are pooled, which is how an
-earlier pass of this analysis missed it.
-
-**Second: does the degeneracy-sensitive readout win where degeneracy exists?**
-Same ablation as section 4.2, same perturbation, same distance conditioning:
-
-| readout | single chains<br>(gaps<1% = 3.6%) | asymmetric multi-chain<br>(2.0%) | **symmetric oligomers<br>(6.6%)** |
+| structures | n | gaps < 1% | median gap |
 |---|---|---|---|
-| `dlam` — eigenvalue shift (ALPS) | **90.9%** / 0.757 | **50.0%** / 0.665 | 75.0% / 0.635 |
-| `dgap` — level spacings (degeneracy) | 54.5% / 0.660 | 37.5% / 0.631 | **100.0%** / **0.731** |
-| `dpart` — active-site participation | 63.6% / 0.682 | 62.5% / 0.645 | 50.0% / 0.647 |
-| `dipr` — mode localisation | 36.4% / 0.637 | 50.0% / 0.660 | 50.0% / 0.636 |
+| single chains (tier-B) | 90 | 3.6% | 7.0% |
+| multi-chain, symmetry unverified | 31 | 3.1% | — |
+| **verified symmetric oligomers** (chain RMSD < 1 Å) | **29** | **6.5%** | 5.8% |
 
-*(cells are % permutation-significant / mean AUC)*
+Near-degenerate pairs roughly double under verified symmetry. That part is solid, and
+it is the group-theoretic result you would expect: the permutation swapping two
+identical chains commutes with the Kirchhoff matrix, so its eigenvectors split into
+symmetric and antisymmetric pairs with nearly equal eigenvalues.
 
-The ordering flips with degeneracy, in the direction the hypothesis predicts: where
-near-degeneracies are scarce the plain eigenvalue shift wins by a wide margin; where
-they are enriched, the observable that reads the degeneracy structure wins instead,
-and does so on every target (median p = 0.0037).
+**The conclusion does not follow. The readout ablation shows no crossover:**
 
-**This is the only positive result for a quantum-specific observable in this
-repository, and it is preliminary.** The symmetric group is n = 4. It is a coherent
-signal — three degeneracy levels, monotone ordering, a mechanism that was predicted
-in advance rather than fitted afterwards — but four targets cannot carry a
-conclusion. What it justifies is a properly powered symmetric-oligomer benchmark,
-not a claim.
+| readout | symmetric oligomers (n=29)<br>gaps<1% = 6.5% | symmetry unverified (n=31)<br>gaps<1% = 3.1% |
+|---|---|---|
+| **`dlam` — eigenvalue shift (ALPS)** | **69.0% / 0.678** | **67.7% / 0.709** |
+| `dgap` — level spacings (degeneracy) | 58.6% / 0.629 | 61.3% / 0.682 |
+| `dpart` — active-site participation | 58.6% / 0.668 | 71.0% / 0.673 |
+| `dipr` — mode localisation | 51.7% / 0.624 | 58.1% / 0.653 |
+
+*(% permutation-significant / mean AUC)*
+
+The plain eigenvalue shift wins in **both** groups. The degeneracy-sensitive readout
+does not improve where degeneracy is enriched — it is marginally *worse* there
+(58.6% vs 61.3%). Doubling the near-degeneracy rate is evidently not enough to make
+interference carry the signal on a real, noisy contact graph.
+
+### 8.1 This corrects an earlier version of this file
+
+At n = 4 symmetric targets, `dgap` led `dlam` 100% to 75% and this section reported it
+as the one positive result for a quantum-specific observable. Expanding the benchmark
+from 34 to 88 multimers, which took the symmetric group from 4 to 29, reversed it. The
+earlier reading was noise.
+
+That is the **second** time in this study a result that looked strong on a small set
+evaporated on a larger one — the cooperative-QUBO hit rate did the same thing, 45.5%
+at n = 11 down to 23.6% at n = 89, below its own random control. Both are recorded
+rather than quietly deleted, because the failure mode is the point: a coherent story,
+a mechanism predicted in advance, and a monotone-looking trend are **not** substitutes
+for sample size.
+
+**Standing count: seven insertion points for a quantum walk have now been measured,
+and all seven fail.** What survives is not an accuracy claim at all — see section 5.
 
 ---
 
@@ -487,9 +498,10 @@ not a claim.
    not strictly an apo test. QASC's own three targets *are* apo — a systematic difference.
 5. `apop`, `qpr`, `cpr` are skipped for N > 660 (they need O(N) eigendecompositions), so
    their n is slightly lower.
-6. **An 11-target tuning set can mislead.** The cooperative-QUBO result looked
-   strong on tier-A (45.5% hit rate) and vanished on tier-B (23.6%, below the
-   random control). Treat every tier-A number as a hypothesis, not a result.
+6. **Small sets mislead, twice over.** The cooperative-QUBO hit rate looked strong at
+   n = 11 (45.5%) and vanished at n = 89 (23.6%, below its own random control); the
+   symmetric-multimer readout result reversed between n = 4 and n = 29. Treat any
+   number here from a set smaller than ~30 as a hypothesis.
 7. **Small samples.** tier-A is 11 targets; tier-B at n = 90 gives roughly ±10% on a 49%
    rate, so the ALPS-vs-`ctrl_dist` and ALPS-vs-`apop` gaps on *significance* are inside
    the interval. The `hit5` gap (24.4% vs 7.8%) is the one that is comfortably outside it.
@@ -541,7 +553,7 @@ scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
-  targets_multimer/  symmetric-oligomer set (34 npz, whole assembly per graph)
+  targets_multimer/  oligomer set (88 npz, whole assembly per graph)
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
 docs/
