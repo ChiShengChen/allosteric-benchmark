@@ -321,7 +321,18 @@ modes, so this is a *framing*, not an advantage, and this repository does not pr
 as one.
 
 Combinatorial selection was the most promising remaining candidate and it has now been
-tested too — section 6 has the full result. **What is left is two things, and the first
+tested too — section 6 has the full result. A second literature search then went looking specifically for quantum observables whose
+signal does *not* come from degeneracy — OTOCs, operator growth, Krylov complexity,
+Lieb-Robinson light cones, quantum Fisher information, non-Hermitian sensing, chiral
+walks. Four more candidates measured, three closed, one still open:
+[`docs/quantum-observable-search.md`](docs/quantum-observable-search.md). The short
+version is that an OTOC on a single-particle hopping model is *algebraically* four times
+the squared transfer amplitude — the observable already rejected — and the same collapse
+happens to Lieb-Robinson. **Chiral quantum walks are the one line still open**, because
+their precondition is cycles rather than degeneracy, and our graphs carry 7.7–8.3
+independent cycles per residue against 3.6% near-degenerate gaps.
+
+**Beyond that, what is left is two things, and the first
 one is not about accuracy at all:**
 
 1. **Algorithmic speedup rather than a better estimator.** Every negative result above is
@@ -574,6 +585,9 @@ data/
   manifest*.json results_*.json
 docs/
   methods-light.svg / methods-dark.svg   the comparison figure above
+  quantum-observable-search.md           second search: OTOC, Lieb-Robinson,
+                                         non-Hermitian sensing, chiral walks
+  quantum-observable-cards.jsonl         its 91 verified evidence cards
   RESULTS.zh.md              detailed results write-up (Chinese)
   methods.zh.md              method-by-method notes (Chinese)
   literature-review.zh.md    literature survey behind the method design (Chinese)
