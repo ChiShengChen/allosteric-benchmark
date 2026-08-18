@@ -121,24 +121,57 @@ Plus a practical problem: tuning E − N + 1 ≈ 2 500–5 200 independent loop 
 searchable. A principled reduction exists — minimise the leading eigenvalue modulus of
 the Perron-Frobenius operator — and so does a physical one, used below.
 
-### First measurement
+### Measured — and it fails too
 
 Rather than tune thousands of phases, we imposed a **Peierls substitution**: a uniform
-magnetic field threads gauge-invariant flux through every cycle, reducing the parameter
-count from thousands to one field strength. Spectral perturbation readout, tier-A subset
-with N ≤ 330:
+"magnetic field" threads gauge-invariant flux through every cycle, reducing the parameter
+count from thousands to one field vector, and giving a physical ansatz rather than a
+fitted one. Implementation in [`methods/chiral.py`](../methods/chiral.py).
 
-| generator | sig | median p | AUC |
-|---|---|---|---|
-| **Laplacian, real symmetric (ALPS)** | **83.3%** | **0.0072** | **0.731** |
-| adjacency, real symmetric | 16.7% | 0.2814 | 0.564 |
-| chiral adjacency, B = 0.05 | 0.0% | 0.8906 | 0.401 |
-| chiral adjacency, B = 0.2 | 16.7% | 0.5707 | 0.447 |
+Three sanity checks pass first, which is what makes the test meaningful:
 
-Chirality did not help — but this is **n = 6, one gauge ansatz, and two field strengths**,
-and it tests chirality on a *spectral* readout while the literature's chiral results are
-about *transport*. It is a first look, not a verdict. What it does establish is that the
-obvious cheap version does not work.
+| check | result |
+|---|---|
+| asymmetry vanishes for a time-reversal-symmetric walk | `max|d| = 0.000e+00` at B = 0 — the observable is chiral *by construction* |
+| Hamiltonian stays Hermitian and genuinely complex | yes |
+| triangle fluxes invariant under a random gauge change | yes, to 1e-9 |
+
+So the score cannot silently collapse into the transfer amplitude that failed before: at
+zero field it is exactly zero, not approximately.
+
+**Readout A — directional asymmetry** `p(anchor→i) − p(i→anchor)`, tier-A (n = 11):
+
+| variant | sig | median p | AUC | hit5 |
+|---|---|---|---|---|
+| **ALPS, real symmetric (reference)** | **90.9%** | **0.0003** | **0.757** | **36.4%** |
+| chiral \|asymmetry\|, B = 0.02 | 9.1% | 0.6582 | 0.477 | 9.1% |
+| chiral \|asymmetry\|, B = 0.1 | 0.0% | 0.9975 | 0.318 | 9.1% |
+| chiral \|asymmetry\|, B = 0.5 | 9.1% | 0.8693 | 0.426 | 9.1% |
+| chiral signed asymmetry, B = 0.1 | 27.3% | 0.5088 | 0.541 | 9.1% |
+
+**Readout B — chirality inside the perturbation framework**, i.e. how local stiffening
+changes the directional asymmetry, which pairs the chiral observable with the only
+framework that has worked here. Tier-A subset, N ≤ 320 (n = 5):
+
+| variant | sig | median p | AUC | hit5 |
+|---|---|---|---|---|
+| **ALPS (reference)** | **80.0%** | **0.0140** | **0.725** | 40.0% |
+| chiral perturbation response, B = 0.05 | 20.0% | 0.2763 | 0.565 | 40.0% |
+| chiral perturbation response, B = 0.2 | 40.0% | 0.0954 | 0.547 | 20.0% |
+
+Pairing chirality with the perturbation framework recovers some signal relative to the
+raw asymmetry (AUC 0.565 vs 0.318), but stays well below the plain real-symmetric
+spectral readout.
+
+**Verdict: chirality is real, measurable and gauge-invariant on these graphs — and
+allosterically uninformative.** The precondition held, unlike every previous candidate,
+and the observable still carries less signal than the time-symmetric one.
+
+Two caveats we are not entitled to wave away. The uniform-field ansatz produces triangle
+fluxes spread across a range rather than concentrated at the π/2 optimum the literature
+identifies for odd cycles, so a phase configuration chosen by the Perron-Frobenius
+criterion could do better. And readout B is n = 5. Neither caveat changes the direction
+of the result, but a determined follow-up has room to work.
 
 ---
 
@@ -154,10 +187,14 @@ failures share one structure:
 > a contact graph — or **non-Hermitian structure** (exceptional points, skin effect) —
 > requiring non-reciprocity or gain/loss that Cβ coordinates cannot justify.
 
-Chiral phases are the one exception: they add genuinely new physics to a single-particle
-Hermitian walk, they need only cycles, and our graphs have cycles in abundance. That is
-why it is the only line left open — and why the first negative measurement above should
-be pushed on properly rather than treated as settled.
+Chiral phases were the one exception on paper: they add genuinely new physics to a
+single-particle Hermitian walk, they need only cycles, and our graphs have cycles in
+abundance. The precondition held and the observable was still uninformative — so the
+exception did not survive contact with the benchmark either.
+
+The residual is small and specific: a phase configuration selected by the
+Perron-Frobenius criterion rather than by a uniform field, tested at proper sample size.
+We would not bet on it.
 
 ---
 

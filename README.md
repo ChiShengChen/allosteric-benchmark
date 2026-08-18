@@ -312,6 +312,7 @@ all five failed:
 | Eigenvector content (active-site participation, mode IPR) | 63.6% and 36.4% |
 | **Cooperative site selection as a QUBO** (section 6) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
 | **Degeneracy-sensitive readouts on symmetric multimers** (section 8) | Symmetry really does enrich near-degeneracies (6.5% vs 3.1%), but the degeneracy-sensitive readout still loses to the plain eigenvalue shift there, and is marginally worse than in the asymmetric group |
+| **Chiral quantum walks** — complex hopping phases breaking time-reversal symmetry ([`docs/quantum-observable-search.md`](docs/quantum-observable-search.md)) | The only candidate whose precondition our graphs satisfy — cycles, not degeneracy, 7.7–8.3 per residue. Scored by the directional asymmetry, which is *exactly zero* without chirality so it cannot collapse into the failed transfer amplitude. AUC 0.318–0.565 against 0.757 for the time-symmetric readout |
 
 **Where a quantum walk legitimately already sits.** The λ_k that ALPS reads *are* the
 eigenvalues of the CTQW Hamiltonian — the slowest coherent frequencies of the walk. "How
@@ -328,9 +329,10 @@ walks. Four more candidates measured, three closed, one still open:
 [`docs/quantum-observable-search.md`](docs/quantum-observable-search.md). The short
 version is that an OTOC on a single-particle hopping model is *algebraically* four times
 the squared transfer amplitude — the observable already rejected — and the same collapse
-happens to Lieb-Robinson. **Chiral quantum walks are the one line still open**, because
-their precondition is cycles rather than degeneracy, and our graphs carry 7.7–8.3
-independent cycles per residue against 3.6% near-degenerate gaps.
+happens to Lieb-Robinson. Chiral quantum walks were the one candidate whose precondition
+our graphs satisfy (cycles, not degeneracy: 7.7–8.3 per residue against 3.6%
+near-degenerate gaps), and they were implemented and measured too. **The precondition
+held and the observable was still uninformative.**
 
 **Beyond that, what is left is two things, and the first
 one is not about accuracy at all:**
@@ -574,6 +576,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
+             chiral.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
              ablate_readouts.py  cooperative.py  diversify.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
