@@ -198,12 +198,97 @@ We would not bet on it.
 
 ---
 
-## What this search did not cover
+---
 
-Quantum kernels and quantum machine learning on graph data, quantum reservoir computing,
-and tensor-network / quantum-inspired classical algorithms appeared in the corpus but no
-full texts were landed and **no evidence cards were extracted for them**. Nothing in this
-document should be read as a verdict on those three.
+## Candidate 5 — quantum kernels, quantum ML, reservoirs, tensor networks
+
+The previous version of this file listed these three as *not covered*: they appeared in
+the corpus but no full texts were landed. A third search closed that gap — 10 queries,
+one snowball round, 376 deduplicated papers, 8 full texts, **61 evidence cards, 61
+verified**. Cards in [`qml-cards.jsonl`](qml-cards.jsonl).
+
+These differ from every other candidate here in one respect that decides the whole
+question: **they require training.** Every method in this repository is unlearned. So the
+comparison that matters is not "quantum kernel versus ALPS" — it is **quantum kernel
+versus a classical kernel on the same features**. Otherwise any gain measures *learning*,
+not *quantum*.
+
+### First: does learning help at all here?
+
+That question bounds the entire branch, and it is answerable on our own data.
+[`scripts/learned_combiner.py`](../scripts/learned_combiner.py) feeds the per-residue
+scores of seven implemented methods into a classical learner, with **cross-validation
+grouped by protein** so no residue of a test protein is ever trained on. 59 held-out
+targets:
+
+| model | sig | median p | AUC | hit5 |
+|---|---|---|---|---|
+| logistic regression on 7 method scores | **55.9%** | **0.0162** | **0.668** | 18.6% |
+| gradient boosting | 47.5% | 0.0678 | 0.636 | 20.3% |
+| **ALPS alone (unlearned)** | 47.5% | 0.0565 | 0.606 | **27.1%** |
+
+Learning helps on **ranking** — AUC 0.668 versus 0.606, significance 55.9% versus 47.5% —
+and **hurts on localisation**, hit5 18.6% versus 27.1%. That is the same split the
+distance control shows: good at pushing true sites up on average, bad at putting them in
+the top five. So a learned model is worth having, but it is not strictly better, and
+whatever a quantum model would have to beat is *this*, not ALPS.
+
+### Then: would a quantum kernel beat the classical one?
+
+The corpus is consistent and it says no.
+
+- The closest analogue to our setting — quantum-kernel SVMs against linear/RBF/polynomial
+  SVMs on nine small tabular datasets, some subsampled to n = 60, under nested
+  cross-validation — gives best classical balanced accuracy **0.830** against best
+  quantum **0.649**, an 18.1-point gap, with classical winning on 8 of 9 datasets and
+  **none of 29 paired comparisons significant at α = 0.05**. Two datasets where quantum
+  led at 10% training data lost at full data, and the learning-curve slopes are identical
+  (0.032 both), so it is not a data-efficiency advantage either.
+- There is a mechanism for why. Quantum kernels only generalise once their bandwidth is
+  tuned, and optimal bandwidth tuning makes them numerically **indistinguishable from an
+  RBF kernel** — matched ROC-AUC, matched spectra, and a geometric difference below the
+  √N threshold, which *provably guarantees* the classical model does at least as well. At
+  the small bandwidths actually selected they collapse further, to a degree-4 polynomial
+  kernel.
+- At scale the quantum kernel matrix approaches the identity, so good generalisation
+  would demand an **exponentially growing sample size** — precisely the failure mode at
+  ~100 labelled proteins. Independently, generalisation error scaling as √(T/N) means
+  ~100 labels affords only tens of trainable gates.
+
+### And is "trainable implies classically simulable" a theorem?
+
+No — and the honest answer matters, because the sloppy version of this claim is common.
+For the standard hardware-efficient ansatz it does hold in practice: it has barren
+plateaus *unless* it is shallow with a local observable, and exactly in that regime it is
+classically simulable. But the general statement is **refuted**: one can construct
+variational models that are gradient-trainable *and* non-dequantizable. Those
+constructions are cryptographic and contrived — nothing that transfers to a contact graph
+— but the theorem does not exist, and this file should not pretend it does.
+
+### Verdict, and the cheap test if you want to check anyway
+
+Not worth implementing. Our feature vector is seven-dimensional, which would mean a
+seven-qubit feature map — exactly the regime where the literature says a bandwidth-tuned
+quantum kernel becomes a polynomial kernel.
+
+If a future reader wants to check rather than take this on trust, the corpus supplies two
+pre-screens that are cheap and decisive: the **geometric difference** between the quantum
+and classical Gram matrices (if it is well below √N, classical is guaranteed to match or
+beat quantum), and the kernel effective-rank ratio together with the non-linearity gap
+(RBF minus linear accuracy). Run those before writing any circuit.
+
+**Not covered even now:** quantum reservoir computing appeared in the corpus (papers on
+particle statistics, squeezing, NARMA-10 benchmarking, non-Markovian architectures) but
+no full text was landed and **no cards were extracted**, so nothing here is a verdict on
+it. Tensor-network methods appear only through the dequantization results — as the
+*classical* tool that removes a quantum advantage, not as a candidate scorer.
+
+---
+
+## What is still not covered
+
+Quantum reservoir computing: present in the corpus, no full text landed, no cards. Not a
+verdict.
 
 ## Method
 

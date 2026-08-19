@@ -313,6 +313,7 @@ all five failed:
 | **Cooperative site selection as a QUBO** (section 6) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
 | **Degeneracy-sensitive readouts on symmetric multimers** (section 8) | Symmetry really does enrich near-degeneracies (6.5% vs 3.1%), but the degeneracy-sensitive readout still loses to the plain eigenvalue shift there, and is marginally worse than in the asymmetric group |
 | **Chiral quantum walks** — complex hopping phases breaking time-reversal symmetry ([`docs/quantum-observable-search.md`](docs/quantum-observable-search.md)) | The only candidate whose precondition our graphs satisfy — cycles, not degeneracy, 7.7–8.3 per residue. Scored by the directional asymmetry, which is *exactly zero* without chirality so it cannot collapse into the failed transfer amplitude. AUC 0.318–0.565 against 0.757 for the time-symmetric readout |
+| **Quantum kernels / quantum ML** | Not implemented, and the literature says not to: bandwidth-tuned quantum kernels become numerically indistinguishable from an RBF kernel, and on small tabular data classical beats quantum by 18.1 points with none of 29 paired comparisons significant. Our feature vector is 7-dimensional — exactly the regime where a quantum kernel collapses to a polynomial one. A classical learned combiner on our own data reaches AUC 0.668, and that is what a quantum model would have to beat |
 
 **Where a quantum walk legitimately already sits.** The λ_k that ALPS reads *are* the
 eigenvalues of the CTQW Hamiltonian — the slowest coherent frequencies of the walk. "How
@@ -577,7 +578,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
              chiral.py
-scripts/     build_dataset.py  build_dataset_b.py  evaluate.py
+scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
@@ -591,6 +592,7 @@ docs/
   quantum-observable-search.md           second search: OTOC, Lieb-Robinson,
                                          non-Hermitian sensing, chiral walks
   quantum-observable-cards.jsonl         its 91 verified evidence cards
+  qml-cards.jsonl                        61 more, on quantum kernels and dequantization
   RESULTS.zh.md              detailed results write-up (Chinese)
   methods.zh.md              method-by-method notes (Chinese)
   literature-review.zh.md    literature survey behind the method design (Chinese)
