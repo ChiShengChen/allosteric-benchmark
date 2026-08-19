@@ -1,10 +1,15 @@
 # allosteric-benchmark
 
 Can a quantum walk predict allosteric sites better than classical methods on the same
-input? This repository was built to answer that, and the answer it measured is **no** —
-across seven different ways of inserting one. It ships the benchmark, the controls and
-the code that produced that result, plus the classical method that came out of the
-search.
+input? This repository was built to answer that. On a benchmark with **geometric proxy
+labels** the answer was a consistent no across seven insertion points — and then a check
+against **curated** allosteric annotations (section 9) reversed several of those
+rankings, including that one. It ships the benchmark, the controls, the curated
+cross-check, and the code behind all of it.
+
+> **Read section 9 first.** The curated-label check invalidates three claims this
+> repository previously led with, including "ALPS is the best method" and "the CTQW
+> baseline performs at random level". Both were properties of the proxy labels.
 
 Everything works from the same minimal input: **per-residue Cβ coordinates plus the
 active-site residue indices**, nothing else. No MD trajectories, no bound (holo)
@@ -23,7 +28,8 @@ with `numpy` + `scipy`.
    finding did not survive a larger one.
 3. **ALPS**, a classical method that came out of the comparison: perturb the contact
    graph locally, read the shift in the three lowest Kirchhoff eigenvalues, z-score
-   against distance. Every design decision traces to a measurement in section 3.
+   against distance. Every design decision traces to a measurement in section 3 — and
+   section 9 shows the last of those decisions was tuned against an artefact.
 
 > **On the quantum framing.** The Kirchhoff matrix ALPS reads *is* the continuous-time
 > quantum walk Hamiltonian, so "how does ligand binding retune the walk's low-lying
@@ -41,17 +47,16 @@ with `numpy` + `scipy`.
 the highest AUC of anything tested. **A method that does not beat that control has not
 demonstrated anything** — and most published-method ports here do not.
 
-**What ALPS achieves.** It beats every control on *localisation*: **24.4% top-5 hit
-rate** on the held-out set against 7.8% for the distance control (3.1×) and 17.2% for
-the strongest published-method port. Shortlisting by score and then spreading the
-selection spatially — a few lines of geometry, no quantum — lifts that to **35.6%**.
+**What ALPS achieves — on proxy labels.** It leads on localisation: 24.4% top-5 hit rate
+against 7.8% for the distance control, rising to 35.6% with spatial diversification.
 
-**What ALPS does not achieve.** It is *below* the distance control on AUC (0.603 vs
-0.614) and inside the confidence interval on significance (48.9% vs 45.6%), so
-localisation is the only metric where its lead is real. **No method here reaches the
-DCC ≤ 4 Å criterion** [Omage et al. 2025] **on any target**; enrichment and pointing at
-the right place are different problems and only the first is solved. A 35.6% top-5 hit
-rate is a research result, not a drug-discovery tool.
+**What the curated check says.** On 73 targets with expert annotations, ALPS is **sixth of
+twelve on AUC** (0.577). Bond-to-bond without distance correction leads (0.618), and the
+CTQW baseline this repo set out to test reaches 0.590 — above the random control and
+above ALPS. ALPS's distance z-score, the component its design credits most, *costs*
+accuracy once the labels are real (0.577 with, 0.598 without), because it corrects for a
+bias that only our own label construction had. **No method reaches DCC ≤ 4 Å** on more
+than 1.9% of targets. Nothing here is a drug-discovery tool.
 
 **What happened to the quantum walk.** Seven insertion points measured, seven failed:
 coherent transfer amplitude; coherent transfer inside the perturbation framework; ENAQT
@@ -62,13 +67,14 @@ solves it exactly at every size tested. Symmetry really does enrich spectral deg
 (6.5% vs 3.1%), just not enough for interference to carry the signal. Section 5 records
 what could still plausibly remain, and it is a *cost* argument, not an accuracy one.
 
-**What to distrust.** The main benchmark's labels are geometric proxies. Section 9 rebuilds
-it from **expert-curated** allosteric and active-site annotations and re-runs everything:
-ALPS's ranking advantage survives (AUC 0.622 against 0.473–0.484 for the controls) and on
-that subset the CTQW baseline stays below chance, but **the distance bias turns out to be an artefact of
-our own label definition**, and ALPS's localisation lead is not confirmed. Three findings
-in this file reversed when the sample or the labels changed (sections 6, 8, 9); all
-earlier readings are kept rather than deleted.
+**What to distrust.** The main benchmark's labels are geometric proxies, and section 9
+shows that matters more than any other caveat here: on curated annotations the method
+ranking reorders, ALPS drops to sixth, the CTQW baseline rises above it, and the distance
+bias that shaped several design decisions turns out to be an artefact of our own label
+construction (`ctrl_dist` goes from strongest-thing-tested to AUC 0.383, below chance).
+Four findings in this file reversed when the sample or the labels changed (sections 6, 8,
+9, and the learned-combiner disclosure); every earlier reading is kept rather than
+deleted.
 
 ---
 
@@ -521,70 +527,93 @@ and all seven fail.** What survives is not an accuracy claim at all — see sect
 
 ---
 
-## 9. Curated labels: what survives, and what was an artefact
+## 9. Curated labels — and the correction they force
 
-Every result above carries the same caveat — the labels are geometric proxies, "a
-drug-like molecule crystallised here, far from the catalytic site", not experimentally
-curated allosteric sites. That caveat is now testable.
+Every result above uses geometric proxy labels: "a drug-like molecule crystallised here,
+far from the catalytic site". Supplementary Table S2 of the ALLO benchmarking paper
+[Wu et al. 2022] lists, for 118 ASBench proteins with sites from ASD Release 4.10, the
+**curated allosteric site residues and active site residues** — the (anchor, y) pair this
+benchmark needs, annotated by the people who built the databases. It is open access and
+reachable through Europe PMC even though the ASD and CASBench servers are down.
+[`scripts/build_dataset_curated.py`](scripts/build_dataset_curated.py) turns it into 73
+targets; annotation mapping is near-lossless.
 
-Supplementary Table S2 of the ALLO benchmarking paper [Wu et al. 2022] lists, for 118
-proteins drawn from ASBench with sites taken from ASD Release 4.10, **both the allosteric
-site residues and the active site residues**, by chain and residue number — exactly the
-(anchor, y) pair this benchmark needs, curated by the people who built the databases.
-It is open access and reachable through Europe PMC even though the ASD and CASBench
-servers themselves are down. [`scripts/build_dataset_curated.py`](scripts/build_dataset_curated.py)
-turns it into 73 targets in the same npz format; annotation mapping is near-lossless
-(13/13, 23/23, 9/9 residues recovered).
+**All 73 curated targets, every core method:**
 
-Evaluated on the 24 curated targets with N ≤ 500:
+| method | AUC | hit5 | sig | median p | DCC ≤ 4 Å |
+|---|---|---|---|---|---|
+| **`btb_raw`** (bond-to-bond, no distance correction) | **0.618** | 12.3% | **60.3%** | 0.0083 | 0.0% |
+| `ctqw_only` (plain CTQW communicability) | 0.598 | 4.1% | 54.8% | 0.0167 | 1.4% |
+| `ALPS_noresid` | 0.598 | 12.3% | 47.9% | 0.0676 | 1.4% |
+| `corrsite` | 0.595 | 8.2% | 46.6% | 0.0660 | 1.4% |
+| **`qasc_baseline`** (the CTQW method this repo set out to test) | **0.590** | 5.5% | 56.2% | 0.0258 | 0.0% |
+| **`ALPS`** | 0.577 | 8.2% | 42.5% | 0.1063 | 0.0% |
+| `apop` | 0.554 | **13.2%** | 39.6% | 0.1567 | 1.9% |
+| `btb` (with distance correction) | 0.532 | 9.6% | 39.7% | 0.1356 | 1.4% |
+| CONTROL `ctrl_random` | 0.526 | 4.1% | 11.0% | 0.3838 | 0.0% |
+| CONTROL `ctrl_burial` | 0.514 | 5.5% | 26.0% | 0.3204 | 0.0% |
+| `prs` | 0.449 | 5.5% | 23.3% | 0.4465 | 1.4% |
+| CONTROL `ctrl_dist` | **0.383** | 2.7% | 20.5% | 0.9963 | 0.0% |
 
-| method | hit5 | sig | AUC | DCC ≤ 4 Å |
-|---|---|---|---|---|
-| `btb_raw` | **20.8%** | 54.2% | 0.526 | 0.0% |
-| `qasc_normlap` | **20.8%** | 41.7% | 0.444 | 0.0% |
-| **`ALPS`** | 12.5% | 41.7% | **0.622** | 0.0% |
-| `ALPS_noresid` | 12.5% | 54.2% | 0.606 | **4.2%** |
-| `apop` | 8.3% | 37.5% | 0.558 | 0.0% |
-| `qasc_baseline` | 8.3% | 37.5% | 0.448 | 0.0% |
-| CONTROL `ctrl_dist` | 8.3% | 33.3% | 0.473 | 0.0% |
-| CONTROL `ctrl_burial` | 12.5% | 20.8% | 0.477 | 0.0% |
-| CONTROL `ctrl_random` | 8.3% | 8.3% | 0.484 | 0.0% |
+### 9.1 Three published claims are wrong
 
-**What survives.** ALPS still has the best ranking quality of anything tested — AUC 0.622
-against 0.473–0.484 for all three controls — and the CTQW baseline still sits below
-chance on AUC (0.448), as it did on the proxy labels. The core claim, that a spectral
-perturbation readout ranks better than a coherent-transfer one and better than trivial
-geometry, holds under curated labels.
+**ALPS is not the best method.** It sits sixth on AUC. `btb_raw` — the bond-to-bond port
+this repo reported as weak — leads at 0.618 with the highest significance rate.
 
-**What was an artefact.** Two things:
+**The CTQW baseline is not at chance.** `qasc_baseline` reaches AUC 0.590 and 56.2%
+significance, comfortably above the random control (0.526, 11.0%) and **above ALPS**. The
+repository's headline finding — that the quantum-walk method performs at random level —
+is a property of the proxy labels, not of the method.
 
-1. **The distance bias was ours, not the task's.** On the proxy benchmark `ctrl_dist`
-   reached 45.6% significance and the highest AUC of any method, which forced the caveat
-   that only methods beating it counted. On curated labels it falls to AUC 0.473 —
-   *below chance*. Curated allosteric sites are simply not distributed the way "a
-   drug-like ligand at least 8 Å from the cofactor" is. The distance bias was a property
-   of our label definition, and every conclusion that leaned on it was reading our own
-   construction back to us.
-2. **ALPS's localisation lead does not survive.** Its 24.4%-versus-7.8% top-5 advantage
-   was the one metric where it clearly beat the controls. Here it is 12.5%, behind
-   `btb_raw` and `qasc_normlap` at 20.8%. Given n = 24 those are 3 targets versus 5, well
-   inside noise — but the honest statement is that the localisation claim is **not
-   confirmed** by curated labels, and the README section above should be read with that.
+**ALPS's signature component is actively harmful here.** The distance-conditional z-score
+is what the design document credits for lifting it from 82% to 91% on the tuning set. On
+curated labels it *costs* accuracy: `ALPS` 0.577 versus `ALPS_noresid` 0.598. The same
+happens to bond-to-bond, 0.532 with the correction versus 0.618 without.
 
-**First non-zero localisation.** `ALPS_noresid` and `btb` each reach DCC ≤ 4 Å on one
-target — the first non-zero anywhere in this repository. One of 24 is not a result, but
-it is no longer categorically zero.
+### 9.2 Why, and why it was predictable in hindsight
 
-**Limits of this check.** n = 24 — and specifically the **N ≤ 500 subset** of the 73 built
-targets, not a random sample of them. A full-set evaluation
-([`scripts/eval_curated_full.py`](scripts/eval_curated_full.py)) is under way, and at 27
-targets covering a different size mix the ordering already differs: `corrsite` leads on
-AUC, and the CTQW baseline sits at 0.553, *above* chance rather than below it. **So the
-"below chance" reading above is specific to the small-structure subset and should not be
-quoted as the curated-label result** until the full run lands. Most pairwise differences
-at this sample size are within noise regardless. What the sample *can* support is the AUC ordering, where the spread between ALPS
-and the controls is wide and consistent with the proxy benchmark, and the collapse of the
-distance control, which is a large and directionally clear change.
+The proxy labels place allosteric sites at a characteristic distance from the cofactor
+site *by construction* — the builder requires ≥ 8 Å separation. That gave `ctrl_dist` its
+strength on the proxy benchmark, which in turn made a distance correction look essential,
+and ALPS was tuned on a proxy-labelled set with that correction in it.
+
+Curated sites are not distributed that way at all. `ctrl_dist` collapses to **AUC 0.383**,
+far *below* chance — real allosteric sites tend to be **closer** to the active site than
+the distal background, the opposite of what our construction encoded. A method carrying an
+explicit correction for a bias that does not exist is carrying a handicap.
+
+There is also a clean size effect that the N ≤ 500 subset hid entirely:
+
+| method | AUC, N ≤ 500 (n=24) | AUC, N > 500 (n=49) |
+|---|---|---|
+| `ALPS` | 0.622 | 0.556 |
+| `btb_raw` | 0.526 | **0.661** |
+| `qasc_baseline` | 0.448 | **0.657** |
+
+ALPS is the best method on small structures and mid-pack on large ones; the CTQW baseline
+is the reverse. Reporting the N ≤ 500 subset — which an earlier version of this file did —
+selected exactly the regime where our own method looks best.
+
+### 9.3 What still holds
+
+- **Every method beats the random control on significance** (23–60% against 11.0%), so the
+  task carries signal and the protocol detects it.
+- **`ctrl_dist` is anti-predictive**, AUC 0.383. The distance bias was a property of our
+  label definition, and every proxy-label conclusion that leaned on it was reading our own
+  construction back to us.
+- **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
+  place remain different problems, and only the first is solved.
+
+### 9.4 What this does to the quantum conclusions
+
+The seven-to-eight failed insertion points were all measured on **proxy labels**. Section
+9.1 shows method rankings do not transfer between label sets — `qasc_baseline` moves from
+"equal to random" to "above ALPS". **The quantum ablations should therefore be re-run on
+curated labels before any of them is quoted as settled.** The analytic results survive
+untouched, because they are algebra rather than measurement: an OTOC on a single-particle
+hopping model still equals four times the squared transfer amplitude, and non-Hermitian
+sensing still needs structure a contact graph does not have. The *empirical* rankings do
+not survive, and this file no longer claims they do.
 
 ---
 
