@@ -227,6 +227,16 @@ targets:
 | gradient boosting | 47.5% | 0.0678 | 0.636 | 20.3% |
 | **ALPS alone (unlearned)** | 47.5% | 0.0565 | 0.606 | **27.1%** |
 
+> ⚠️ **These 59 targets are not the full eligible set.** 89 tier-B targets meet the
+> criteria (N ≤ 660, labelled, enough background); feature extraction was interrupted
+> and the cache covers the alphabetical prefix `10ZG_A` … `3R6W_A`, i.e. **59 of 89**.
+> PDB IDs are not random with respect to deposition era, so this is a potential
+> selection bias, not a random subsample. The comparison between rows is still like for
+> like — every model is scored on the same 59 targets — but the absolute rates should not
+> be quoted as the held-out numbers for this benchmark. Rebuild with
+> `python3 scripts/learned_combiner.py` (the cache is incremental) and re-read before
+> relying on them.
+
 Learning helps on **ranking** — AUC 0.668 versus 0.606, significance 55.9% versus 47.5% —
 and **hurts on localisation**, hit5 18.6% versus 27.1%. That is the same split the
 distance control shows: good at pushing true sites up on average, bad at putting them in
