@@ -64,8 +64,8 @@ what could still plausibly remain, and it is a *cost* argument, not an accuracy 
 
 **What to distrust.** The main benchmark's labels are geometric proxies. Section 9 rebuilds
 it from **expert-curated** allosteric and active-site annotations and re-runs everything:
-ALPS's ranking advantage survives (AUC 0.622 against 0.473–0.484 for the controls) and the
-CTQW baseline stays below chance, but **the distance bias turns out to be an artefact of
+ALPS's ranking advantage survives (AUC 0.622 against 0.473–0.484 for the controls) and on
+that subset the CTQW baseline stays below chance, but **the distance bias turns out to be an artefact of
 our own label definition**, and ALPS's localisation lead is not confirmed. Three findings
 in this file reversed when the sample or the labels changed (sections 6, 8, 9); all
 earlier readings are kept rather than deleted.
@@ -575,9 +575,14 @@ geometry, holds under curated labels.
 target — the first non-zero anywhere in this repository. One of 24 is not a result, but
 it is no longer categorically zero.
 
-**Limits of this check.** n = 24 (the N ≤ 500 subset of 73 built targets; the rest are
-larger and ALPS costs N eigendecompositions). Most pairwise differences here are within
-noise. What the sample *can* support is the AUC ordering, where the spread between ALPS
+**Limits of this check.** n = 24 — and specifically the **N ≤ 500 subset** of the 73 built
+targets, not a random sample of them. A full-set evaluation
+([`scripts/eval_curated_full.py`](scripts/eval_curated_full.py)) is under way, and at 27
+targets covering a different size mix the ordering already differs: `corrsite` leads on
+AUC, and the CTQW baseline sits at 0.553, *above* chance rather than below it. **So the
+"below chance" reading above is specific to the small-structure subset and should not be
+quoted as the curated-label result** until the full run lands. Most pairwise differences
+at this sample size are within noise regardless. What the sample *can* support is the AUC ordering, where the spread between ALPS
 and the controls is wide and consistent with the proxy benchmark, and the collapse of the
 distance control, which is a large and directionally clear change.
 
