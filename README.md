@@ -62,9 +62,13 @@ solves it exactly at every size tested. Symmetry really does enrich spectral deg
 (6.5% vs 3.1%), just not enough for interference to carry the signal. Section 5 records
 what could still plausibly remain, and it is a *cost* argument, not an accuracy one.
 
-**What to distrust.** Labels here are geometric proxies, not curated allosteric sites;
-the benchmark carries a distance bias; and two findings in this file reversed when the
-sample grew (sections 6 and 8). Both readings are kept rather than deleted.
+**What to distrust.** The main benchmark's labels are geometric proxies. Section 9 rebuilds
+it from **expert-curated** allosteric and active-site annotations and re-runs everything:
+ALPS's ranking advantage survives (AUC 0.622 against 0.473–0.484 for the controls) and the
+CTQW baseline stays below chance, but **the distance bias turns out to be an artefact of
+our own label definition**, and ALPS's localisation lead is not confirmed. Three findings
+in this file reversed when the sample or the labels changed (sections 6, 8, 9); all
+earlier readings are kept rather than deleted.
 
 ---
 
@@ -517,12 +521,78 @@ and all seven fail.** What survives is not an accuracy claim at all — see sect
 
 ---
 
-## 9. Limitations
+## 9. Curated labels: what survives, and what was an artefact
 
-1. **Proxy labels.** `y` = "a drug-like molecule binds here, ≥ 8 Å from the catalytic site",
-   not an experimentally validated allosteric site.
-2. **The benchmark has a distance bias.** `ctrl_dist` reaches 42–55% on both independent
-   sets. Only methods that beat it on something count — ALPS does so on `hit5`, not on `sig`.
+Every result above carries the same caveat — the labels are geometric proxies, "a
+drug-like molecule crystallised here, far from the catalytic site", not experimentally
+curated allosteric sites. That caveat is now testable.
+
+Supplementary Table S2 of the ALLO benchmarking paper [Wu et al. 2022] lists, for 118
+proteins drawn from ASBench with sites taken from ASD Release 4.10, **both the allosteric
+site residues and the active site residues**, by chain and residue number — exactly the
+(anchor, y) pair this benchmark needs, curated by the people who built the databases.
+It is open access and reachable through Europe PMC even though the ASD and CASBench
+servers themselves are down. [`scripts/build_dataset_curated.py`](scripts/build_dataset_curated.py)
+turns it into 73 targets in the same npz format; annotation mapping is near-lossless
+(13/13, 23/23, 9/9 residues recovered).
+
+Evaluated on the 24 curated targets with N ≤ 500:
+
+| method | hit5 | sig | AUC | DCC ≤ 4 Å |
+|---|---|---|---|---|
+| `btb_raw` | **20.8%** | 54.2% | 0.526 | 0.0% |
+| `qasc_normlap` | **20.8%** | 41.7% | 0.444 | 0.0% |
+| **`ALPS`** | 12.5% | 41.7% | **0.622** | 0.0% |
+| `ALPS_noresid` | 12.5% | 54.2% | 0.606 | **4.2%** |
+| `apop` | 8.3% | 37.5% | 0.558 | 0.0% |
+| `qasc_baseline` | 8.3% | 37.5% | 0.448 | 0.0% |
+| CONTROL `ctrl_dist` | 8.3% | 33.3% | 0.473 | 0.0% |
+| CONTROL `ctrl_burial` | 12.5% | 20.8% | 0.477 | 0.0% |
+| CONTROL `ctrl_random` | 8.3% | 8.3% | 0.484 | 0.0% |
+
+**What survives.** ALPS still has the best ranking quality of anything tested — AUC 0.622
+against 0.473–0.484 for all three controls — and the CTQW baseline still sits below
+chance on AUC (0.448), as it did on the proxy labels. The core claim, that a spectral
+perturbation readout ranks better than a coherent-transfer one and better than trivial
+geometry, holds under curated labels.
+
+**What was an artefact.** Two things:
+
+1. **The distance bias was ours, not the task's.** On the proxy benchmark `ctrl_dist`
+   reached 45.6% significance and the highest AUC of any method, which forced the caveat
+   that only methods beating it counted. On curated labels it falls to AUC 0.473 —
+   *below chance*. Curated allosteric sites are simply not distributed the way "a
+   drug-like ligand at least 8 Å from the cofactor" is. The distance bias was a property
+   of our label definition, and every conclusion that leaned on it was reading our own
+   construction back to us.
+2. **ALPS's localisation lead does not survive.** Its 24.4%-versus-7.8% top-5 advantage
+   was the one metric where it clearly beat the controls. Here it is 12.5%, behind
+   `btb_raw` and `qasc_normlap` at 20.8%. Given n = 24 those are 3 targets versus 5, well
+   inside noise — but the honest statement is that the localisation claim is **not
+   confirmed** by curated labels, and the README section above should be read with that.
+
+**First non-zero localisation.** `ALPS_noresid` and `btb` each reach DCC ≤ 4 Å on one
+target — the first non-zero anywhere in this repository. One of 24 is not a result, but
+it is no longer categorically zero.
+
+**Limits of this check.** n = 24 (the N ≤ 500 subset of 73 built targets; the rest are
+larger and ALPS costs N eigendecompositions). Most pairwise differences here are within
+noise. What the sample *can* support is the AUC ordering, where the spread between ALPS
+and the controls is wide and consistent with the proxy benchmark, and the collapse of the
+distance control, which is a large and directionally clear change.
+
+---
+
+## 10. Limitations
+
+1. **Proxy labels on the main benchmark.** `y` = "a drug-like molecule binds here, ≥ 8 Å
+   from the catalytic site", not an experimentally validated allosteric site. Section 9
+   re-runs everything on curated annotations and reports which conclusions survive; two
+   did not.
+2. **The proxy benchmark has a distance bias that curated labels do not** (section 9).
+   On proxy labels `ctrl_dist` reaches 42–55%; on curated labels it drops to AUC 0.473,
+   below chance. Treat the proxy-label rankings as measuring our construction as much as
+   the task.
 3. **ALPS hyperparameters were chosen on tier-A**; tier-B is the unbiased estimate.
 4. **Coordinates are holo conformations** (protein atoms only, ligands stripped), so this is
    not strictly an apo test. QASC's own three targets *are* apo — a systematic difference.
@@ -538,7 +608,7 @@ and all seven fail.** What survives is not an accuracy claim at all — see sect
 
 ---
 
-## 10. Reproduce
+## 11. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -557,6 +627,9 @@ python3 scripts/diversify.py  --targets data/targets_b   # top-k selection strat
 python3 scripts/build_dataset_multimer.py 2694 60        # symmetric-oligomer set
 python3 scripts/multimer_ablation.py                     # readouts where degeneracy exists
 python3 scripts/make_figure.py                           # regenerate the figure
+
+python3 scripts/build_dataset_curated.py                 # curated-label benchmark
+python3 scripts/evaluate.py --targets data/targets_curated_small
 ```
 
 Scoring your own structure:
@@ -573,7 +646,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ---
 
-## 11. Repository layout
+## 12. Repository layout
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
@@ -585,6 +658,8 @@ data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
   targets_multimer/  oligomer set (88 npz, whole assembly per graph)
+  targets_curated/   73 npz with EXPERT-CURATED allosteric + active site residues
+  allo_tableS2.csv   the curated annotation table they are built from
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
 docs/
@@ -606,7 +681,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 12. Credits
+## 13. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)
