@@ -624,7 +624,60 @@ otherwise — is not the best published score. It is 0.617 from one line of geom
 the honest question for any new observable is whether it adds anything *after
 conditioning on distance*. On the evidence here, none of the twelve does.
 
-### 9.4 What still holds
+### 9.4 Conditioning on distance: what actually carries signal
+
+Plain AUC is confounded in both directions — on proxy labels by distance, on curated
+labels by closeness — so it cannot answer "does this method know anything about
+allostery". [`scripts/partial_auc.py`](scripts/partial_auc.py) removes the confound
+non-parametrically: it compares only (positive, negative) pairs whose distances to the
+active site differ by **at most 2 Å**, so within a pair the geometry is spent and
+anything above chance is information the method carries beyond proximity.
+
+The control validates the metric before the methods are read: `ctrl_closeness` collapses
+from AUC 0.617 to **0.480**, as it must, since within a distance stratum it is nearly
+constant. The distance information really is gone. `ctrl_random` sits at **0.523** rather
+than 0.500 — spatial smoothing plus clustered positives leaves a small positive bias — so
+**0.523 is the floor to read against, not 0.5**.
+
+All 72 curated targets, median 576 matched pairs each:
+
+| method | stratified AUC | vs the random floor |
+|---|---|---|
+| **`ALPS_noresid`** | **0.579** | **+0.056** |
+| **`ALPS`** | **0.578** | **+0.055** |
+| `apop` | 0.541 | +0.018 |
+| `corrsite` | 0.526 | +0.003 |
+| CONTROL `ctrl_random` | 0.523 | — |
+| CONTROL `ctrl_dist` | 0.521 | −0.002 |
+| `btb` | 0.518 | −0.005 |
+| `ctqw_only` | 0.515 | −0.008 |
+| `btb_raw` | 0.510 | −0.013 |
+| `qasc_baseline` | 0.502 | −0.021 |
+| CONTROL `ctrl_burial` | 0.497 | −0.026 |
+| CONTROL `ctrl_closeness` | 0.480 | −0.043 |
+| `prs` | 0.455 | −0.068 |
+
+**This resolves the confusion in section 9.1, in both directions.**
+
+- **ALPS is the only method carrying substantial information beyond proximity**, and by a
+  clear margin — +0.055 over the random floor while everything else is within ±0.02. Its
+  sixth-place finish on plain AUC was the confound, not the method.
+- **`btb_raw`'s first place was proximity.** It led plain AUC at 0.618 and lands at 0.510
+  here, below the random floor.
+- **The quantum readouts carry essentially nothing beyond distance.** `qasc_baseline`
+  0.502 and `ctqw_only` 0.515, both at or under the floor. The original finding — that
+  the CTQW method does not add anything — is *restored*, now on a metric that cannot be
+  explained by geometry rather than on proxy labels that manufactured it.
+- The distance z-score is not what makes ALPS work: `ALPS` and `ALPS_noresid` are
+  indistinguishable here (0.578 vs 0.579). It was compensating for a label artefact, and
+  with the confound removed properly it is simply neutral.
+
+**Caveats.** The 0.523 floor is estimated from one random control, so margins under about
+0.03 should not be read as real — that covers `apop` and `corrsite`. And this measures
+discrimination, not localisation: nothing here changes the fact that no method reaches
+DCC ≤ 4 Å on more than 1.9% of targets.
+
+### 9.5 What still holds
 
 - **Every method beats the random control on significance** (23–60% against 11.0%), so the
   task carries signal and the protocol detects it.
@@ -634,12 +687,15 @@ conditioning on distance*. On the evidence here, none of the twelve does.
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.5 What this does to the quantum conclusions
+### 9.6 What this does to the quantum conclusions
 
-The seven-to-eight failed insertion points were all measured on **proxy labels**. Section
-9.1 shows method rankings do not transfer between label sets — `qasc_baseline` moves from
-"equal to random" to "above ALPS". **The quantum ablations should therefore be re-run on
-curated labels before any of them is quoted as settled.** The analytic results survive
+The eight failed insertion points were measured on **proxy labels**, and section 9.1 shows
+plain-AUC rankings do not transfer between label sets. But section 9.4 re-tests the two
+central quantum readouts on curated labels with the proximity confound removed, and they
+land at 0.502 and 0.515 against a 0.523 random floor — carrying nothing beyond geometry.
+**The quantum negative therefore stands, and now rests on curated labels and a confound-free
+metric rather than on the proxy construction.** The remaining ablations should still be
+re-run the same way before each is quoted individually. The analytic results survive
 untouched, because they are algebra rather than measurement: an OTOC on a single-particle
 hopping model still equals four times the squared transfer amplitude, and non-Hermitian
 sensing still needs structure a contact graph does not have. The *empirical* rankings do
