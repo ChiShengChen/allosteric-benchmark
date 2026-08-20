@@ -655,6 +655,7 @@ All 72 curated targets, median 576 matched pairs each:
 | `qasc_baseline` | 0.502 | −0.021 |
 | CONTROL `ctrl_burial` | 0.497 | −0.026 |
 | CONTROL `ctrl_closeness` | 0.480 | −0.043 |
+| **`qfi`** (quantum Fisher information) | **0.464** | **−0.059** |
 | `prs` | 0.455 | −0.068 |
 
 **This resolves the confusion in section 9.1, in both directions.**
@@ -665,12 +666,33 @@ All 72 curated targets, median 576 matched pairs each:
 - **`btb_raw`'s first place was proximity.** It led plain AUC at 0.618 and lands at 0.510
   here, below the random floor.
 - **The quantum readouts carry essentially nothing beyond distance.** `qasc_baseline`
-  0.502 and `ctqw_only` 0.515, both at or under the floor. The original finding — that
+  0.502, `ctqw_only` 0.515 and `qfi` 0.464, all at or under the floor. The original finding — that
   the CTQW method does not add anything — is *restored*, now on a metric that cannot be
   explained by geometry rather than on proxy labels that manufactured it.
 - The distance z-score is not what makes ALPS work: `ALPS` and `ALPS_noresid` are
   indistinguishable here (0.578 vs 0.579). It was compensating for a label artefact, and
   with the confound removed properly it is simply neutral.
+
+**Quantum Fisher information, the last candidate, also fails.** An earlier pass of this
+study dismissed the whole QFI family by conflating it with exceptional-point sensing,
+which needs non-Hermitian structure a contact graph cannot supply. That was a mistake:
+QFI for a *Hermitian* generator is perfectly computable, and it clears every filter this
+study had established — no degeneracy required, no non-Hermitian structure, cannot
+collapse into the transfer amplitude (it uses eigenvector overlaps that the
+eigenvalue-shift readout discards), and it is a perturbation response, the only framework
+that has carried signal here. [`methods/qfi.py`](methods/qfi.py) implements it as the
+variance of the generator `G_i(t) = ∫₀ᵗ U(s)† V_i U(s) ds`, validated against the exact
+eigenbasis closed form to 2.9e-14 with correlation 1.00000000.
+
+It lands at **0.464**, below the random floor and below the closeness control. So the
+observable that was, on paper, the best-motivated remaining quantum candidate carries
+nothing beyond geometry either.
+
+*(One implementation note worth keeping, because it nearly produced a wrong answer: the
+integrand oscillates at frequencies up to λ_max, so setting the horizon by the slowest
+mode makes Gauss-Legendre quadrature under-resolve it silently — 6% error against the
+closed form. The fast-mode horizon 2π/λ_max fixes it. A quantum observable can fail for
+numerical reasons that look exactly like a physics result.)*
 
 **Caveats.** The 0.523 floor is estimated from one random control, so margins under about
 0.03 should not be read as real — that covers `apop` and `corrsite`. And this measures
@@ -770,7 +792,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
-             chiral.py
+             chiral.py  qfi.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py

@@ -16,6 +16,7 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, "scripts"))
 from methods.alps import alps_scores, spectral_response, distance_zscore   # noqa: E402
 from methods.enm import apop_scores, corrsite_scores, prs_scores           # noqa: E402
 from methods.btb import btb_scores                                         # noqa: E402
+from methods.qfi import qfi_scores                                         # noqa: E402
 from methods.quantum import (ctqw_communicability, ipr_resonant_transfer,  # noqa: E402
                              noisy_or)
 from methods.common import (contact_graph, distal_nonanchor_mask,          # noqa: E402
@@ -33,6 +34,7 @@ def score_all(cb, anchor, pool):
         "qasc_baseline": noisy_or(ctqw, ipr_resonant_transfer(A, anchor)),
         "ctqw_only": ctqw,
         "corrsite": corrsite_scores(cb, anchor),
+        "qfi": qfi_scores(cb, anchor),
         "prs": prs_scores(cb, anchor),
         "btb_raw": btb_scores(cb, anchor, distance_corrected=False),
         "btb": btb_scores(cb, anchor, distance_corrected=True, pool=pool),
