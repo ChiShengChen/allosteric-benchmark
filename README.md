@@ -594,7 +594,37 @@ ALPS is the best method on small structures and mid-pack on large ones; the CTQW
 is the reverse. Reporting the N ≤ 500 subset — which an earlier version of this file did —
 selected exactly the regime where our own method looks best.
 
-### 9.3 What still holds
+### 9.3 The finding that matters most: nothing beats closeness
+
+`ctrl_dist` scoring *below* chance means its mirror scores above it. Adding that mirror as
+a control — `ctrl_closeness = -distance`, one line, no graph, no model — gives:
+
+| | AUC | significance |
+|---|---|---|
+| `btb_raw`, the best method tested | 0.618 | 60.3% |
+| **`ctrl_closeness` (−distance)** | **0.617** | **56.2%** |
+| `ctqw_only` | 0.598 | 54.8% |
+| `ALPS` | 0.577 | 42.5% |
+
+**Nothing in this repository beats it.** The best method leads by 0.001 AUC. Every other
+method, quantum and classical, is below a one-line geometric baseline.
+
+That also explains why the quantum readout looks respectable: the CTQW score correlates
+**−0.647** with distance-to-anchor on these targets. It is a proximity ranker, and on
+curated labels proximity is what predicts allosteric sites. Its 0.598 is not evidence of
+a quantum signal; it is evidence that it partially reproduces `−distance`.
+
+Protocol note: 87% of curated allosteric residues fall inside the distal (≥ 8 Å)
+candidate pool — median 100%, and only one target has none — so this is not an artefact
+of the pool definition. The sites really are distal by our threshold *and* closer to the
+active site than the distal background, and the second fact is the one that predicts them.
+
+**Consequence for anyone extending this work.** The bar for a new method — quantum or
+otherwise — is not the best published score. It is 0.617 from one line of geometry, and
+the honest question for any new observable is whether it adds anything *after
+conditioning on distance*. On the evidence here, none of the twelve does.
+
+### 9.4 What still holds
 
 - **Every method beats the random control on significance** (23–60% against 11.0%), so the
   task carries signal and the protocol detects it.
@@ -604,7 +634,7 @@ selected exactly the regime where our own method looks best.
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.4 What this does to the quantum conclusions
+### 9.5 What this does to the quantum conclusions
 
 The seven-to-eight failed insertion points were all measured on **proxy labels**. Section
 9.1 shows method rankings do not transfer between label sets — `qasc_baseline` moves from

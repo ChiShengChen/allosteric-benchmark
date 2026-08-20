@@ -37,6 +37,10 @@ def score_all(cb, anchor, pool):
         "btb_raw": btb_scores(cb, anchor, distance_corrected=False),
         "btb": btb_scores(cb, anchor, distance_corrected=True, pool=pool),
         "ctrl_dist": d,
+        # closeness is the mirror control, and on curated labels it is the one
+        # that matters: real allosteric sites sit CLOSER to the active site than
+        # the distal background, so -distance is the trivial baseline to beat
+        "ctrl_closeness": -d,
         "ctrl_burial": A.sum(axis=1),
         "ctrl_random": np.random.default_rng(0).random(len(cb)),
     }
