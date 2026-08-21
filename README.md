@@ -639,6 +639,11 @@ constant. The distance information really is gone. `ctrl_random` sits at **0.523
 than 0.500 — spatial smoothing plus clustered positives leaves a small positive bias — so
 **0.523 is the floor to read against, not 0.5**.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/stratified-dark.svg">
+  <img alt="Distance-stratified AUC on 72 curated targets. ALPS and ALPS_noresid clear the 0.523 random floor at 0.578-0.579; every quantum readout is at or below it, with quantum Fisher information lowest at 0.464." src="docs/stratified-light.svg" width="100%">
+</picture>
+
 All 72 curated targets, median 576 matched pairs each:
 
 | method | stratified AUC | vs the random floor |
@@ -806,6 +811,7 @@ data/
   manifest*.json results_*.json
 docs/
   methods-light.svg / methods-dark.svg   the comparison figure above
+  stratified-light.svg / -dark.svg       the confound-free comparison (section 9.4)
   quantum-observable-search.md           second search: OTOC, Lieb-Robinson,
                                          non-Hermitian sensing, chiral walks
   quantum-observable-cards.jsonl         its 91 verified evidence cards

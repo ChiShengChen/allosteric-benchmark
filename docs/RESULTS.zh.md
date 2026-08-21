@@ -394,6 +394,11 @@ ALPS 在小結構上最好、大結構上中段;CTQW baseline 相反。
 `ctrl_random` 落在 **0.523** 而非 0.500(空間平滑加上正例群聚造成的小偏差),
 所以**該對照的地板是 0.523,不是 0.5**。
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="stratified-dark.svg">
+  <img alt="72 個策展目標的距離分層 AUC" src="stratified-light.svg" width="100%">
+</picture>
+
 全部 72 個策展目標,每個中位 576 組配對:
 
 | 方法 | 分層 AUC | 相對亂數地板 |

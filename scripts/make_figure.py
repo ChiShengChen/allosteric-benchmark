@@ -163,6 +163,85 @@ def render(rows, n_targets, mode):
     return "\n".join(o)
 
 
+def render_stratified(rows, floor, n_targets, mode):
+    """The confound-free comparison: distance-stratified AUC, one panel.
+
+    Plain AUC is confounded by proximity on both label sets, so this is the
+    metric the conclusions rest on. The random control is drawn as the floor
+    because it sits at 0.523 rather than 0.500 — spatial smoothing plus
+    clustered positives — and reading against 0.5 would overstate everything.
+    """
+    c = THEME[mode]
+    order = sorted(rows, key=lambda m: -rows[m])
+    top, row_h = 104, 26
+    W2 = 760
+    H = top + len(order) * row_h + 56
+    lab_w, plot_w = 210, 470
+    lo, hi = 0.44, 0.60
+
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W2}" height="{H}" '
+         f'viewBox="0 0 {W2} {H}" font-family="-apple-system,BlinkMacSystemFont,'
+         f'\'Segoe UI\',Helvetica,Arial,sans-serif">',
+         f'<rect width="{W2}" height="{H}" fill="{c["surface"]}"/>',
+         f'<text x="16" y="30" font-size="16" font-weight="600" fill="{c["ink"]}">'
+         f'What survives after conditioning on distance</text>',
+         f'<text x="16" y="50" font-size="12" fill="{c["ink2"]}">'
+         f'Distance-stratified AUC on {n_targets} curated targets: only residue pairs '
+         f'within 2 &#197; of each other</text>',
+         f'<text x="16" y="66" font-size="12" fill="{c["ink2"]}">'
+         f'in distance-to-active-site are compared, so proximity is spent and anything '
+         f'above the floor is real.</text>']
+    lg = [(c["accent"], "best classical method"), (c["muted"], "other methods"),
+          (c["control"], "controls / quantum readouts")]
+    x = 16
+    for col, lab in lg:
+        o.append(f'<rect x="{x}" y="80" width="10" height="10" rx="2" fill="{col}"/>')
+        o.append(f'<text x="{x+15}" y="89" font-size="11.5" fill="{c["ink2"]}">{lab}</text>')
+        x += 22 + len(lab) * 6.4
+
+    def px(v):
+        return lab_w + (v - lo) / (hi - lo) * plot_w
+    y1 = top + len(order) * row_h
+    for t in (0.45, 0.50, 0.55, 0.60):
+        gx = px(t)
+        o.append(f'<line x1="{gx:.1f}" y1="{top-6}" x2="{gx:.1f}" y2="{y1}" '
+                 f'stroke="{c["grid"]}" stroke-width="1"/>')
+        o.append(f'<text x="{gx:.1f}" y="{y1+16}" font-size="10" text-anchor="middle" '
+                 f'fill="{c["ink3"]}">{t:.2f}</text>')
+    fx = px(floor)
+    o.append(f'<line x1="{fx:.1f}" y1="{top-6}" x2="{fx:.1f}" y2="{y1}" '
+             f'stroke="{c["control"]}" stroke-width="1.5" stroke-dasharray="3 3"/>')
+    o.append(f'<text x="{fx+5:.1f}" y="{top-10}" font-size="10.5" '
+             f'fill="{c["control"]}">random floor {floor:.3f}</text>')
+
+    QUANT = {"qfi", "ctqw_only", "qasc_baseline"}
+    CTRL = {"ctrl_random", "ctrl_dist", "ctrl_burial", "ctrl_closeness"}
+    for ri, m in enumerate(order):
+        v = rows[m]
+        y = top + ri * row_h + 6
+        col = (c["accent"] if m in ("ALPS", "ALPS_noresid")
+               else c["control"] if (m in CTRL or m in QUANT) else c["muted"])
+        x0, x1 = px(min(v, floor)), px(max(v, floor))
+        o.append(f'<rect x="{x0:.1f}" y="{y}" width="{max(1.5, x1-x0):.1f}" height="12" '
+                 f'rx="4" fill="{col}"/>')
+        note = " (quantum)" if m in QUANT else (" (control)" if m in CTRL else "")
+        o.append(f'<text x="{lab_w-10}" y="{y+10}" font-size="11.5" text-anchor="end" '
+                 f'fill="{c["ink"] if m in ("ALPS","ALPS_noresid") else c["ink2"]}" '
+                 f'font-family="ui-monospace,SFMono-Regular,Menlo,monospace">'
+                 f'{esc(m)}{note}</text>')
+        tx = px(v) + (6 if v >= floor else -6)
+        anc = "start" if v >= floor else "end"
+        for stroke, fill in ((c["surface"], "none"), ("none", c["ink3"])):
+            o.append(f'<text x="{tx:.1f}" y="{y+10}" font-size="10.5" '
+                     f'text-anchor="{anc}" fill="{fill}" stroke="{stroke}" '
+                     f'stroke-width="2.5" stroke-linejoin="round">{v:.3f}</text>')
+    o.append(f'<text x="16" y="{H-14}" font-size="10.5" fill="{c["ink3"]}">'
+             f'Curated ASBench/ASD annotations. Only ALPS clears the floor; every quantum '
+             f'readout is at or below it.</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default=os.path.join(HERE, "data", "results_tierB.json"))
@@ -174,6 +253,19 @@ def main():
         p = os.path.join(a.out, f"methods-{mode}.svg")
         open(p, "w").write(render(rows, n, mode))
         print(f"wrote {p}  ({len(rows)} methods, {n} targets)")
+
+    sp = os.path.join(HERE, "data", "results_partial_auc.json")
+    if os.path.exists(sp):
+        R = json.load(open(sp))
+        sr = {}
+        for m in sorted({k for r in R for k in r["rows"]}):
+            v = [r["rows"][m][0] for r in R if m in r["rows"] and r["rows"][m][0] is not None]
+            sr[m] = float(np.nanmean(np.asarray(v, float)))
+        floor = sr.get("ctrl_random", 0.5)
+        for mode in ("light", "dark"):
+            p = os.path.join(a.out, f"stratified-{mode}.svg")
+            open(p, "w").write(render_stratified(sr, floor, len(R), mode))
+            print(f"wrote {p}  ({len(sr)} methods, {len(R)} targets)")
 
 
 if __name__ == "__main__":
