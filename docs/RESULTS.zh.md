@@ -25,12 +25,9 @@
 
 ## 1. 總表
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="methods-dark.svg">
-  <img alt="22 個方法在留出 benchmark 上的比較" src="methods-light.svg" width="100%">
-</picture>
-
-*橘色為平庸對照,虛線為亂數對照。AUC 面板以 0.5(隨機)為基準發散——向左表示把真異位殘基排在背景**之下**。*
+> ⚠️ **本節排名已被證實受混淆**:使用代理標籤與原始 AUC,而 §3.9 顯示兩者都被距離主導。
+> 保留為代理 benchmark 當時說法的記錄;**結論所依據的指標圖在本文件 §3.9**,
+> 舊的三面板圖移到文末附錄。
 
 
 `sig` = 置換檢定 p<0.05 的比例;`AUC` = 候選池內 ROC-AUC(0.5=隨機);`hit5` = top-5 命中率。
@@ -399,6 +396,9 @@ ALPS 在小結構上最好、大結構上中段;CTQW baseline 相反。
   <img alt="72 個策展目標的距離分層 AUC" src="stratified-light.svg" width="100%">
 </picture>
 
+*本 repo 的頭條結果,使用唯一未被近度混淆的指標:策展標籤、距離配對、以亂數對照為基準
+(非 0)畫發散長條。只有 ALPS 過地板,每個量子讀數都在地板以下。*
+
 全部 72 個策展目標,每個中位 576 組配對:
 
 | 方法 | 分層 AUC | 相對亂數地板 |
@@ -499,3 +499,20 @@ python3 scripts/evaluate.py --targets data/targets_b
 python3 scripts/evaluate.py --targets data/qasc_targets
 python3 scripts/ablate_readouts.py                # 頻譜量消融
 ```
+
+
+---
+
+## 附錄:被混淆的舊圖(保留作為記錄)
+
+這是策展檢驗之前的頭條圖。它以 90 個代理標籤目標呈現 top-5 命中率、置換顯著率與原始 ROC-AUC,
+而它**以一種很有教育意義的方式是錯的**:代理標籤依建構規則把異位位點放在特定距離上,
+所以原始 AUC 主要在量近度,其排序無法在策展標註下存活。`btb_raw` 在這裡接近墊底、
+在策展標籤上卻是第一;CTQW baseline 在這裡是隨機水準、在那裡卻高於 ALPS。
+
+保留它,是因為刪掉會掩蓋一件事:**一個被混淆的 benchmark 看起來有多有說服力。**
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="methods-dark.svg">
+  <img alt="已被取代的三面板比較圖(代理標籤)" src="methods-light.svg" width="100%">
+</picture>

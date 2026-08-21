@@ -76,6 +76,16 @@ Four findings in this file reversed when the sample or the labels changed (secti
 9, and the learned-combiner disclosure); every earlier reading is kept rather than
 deleted.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/stratified-dark.svg">
+  <img alt="Distance-stratified AUC on 72 curated targets. ALPS and ALPS_noresid clear the 0.523 random floor at 0.578-0.579; every quantum readout is at or below it, with quantum Fisher information lowest at 0.464." src="docs/stratified-light.svg" width="100%">
+</picture>
+
+*The headline result, on the only metric here that is not confounded by proximity
+(section 9.4): curated labels, distance-matched pairs, bars measured from the random
+control rather than from zero. Only ALPS clears the floor; every quantum readout falls
+short of it.*
+
 ---
 
 ## 1. Why build a new benchmark
@@ -196,14 +206,12 @@ that shared spectrum.
 
 ## 4. Results
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/methods-dark.svg">
-  <img alt="Method comparison on the held-out benchmark: top-5 hit rate, permutation significance and ROC-AUC for 22 methods and three trivial controls across 90 family-declustered targets. ALPS leads on top-5 hit rate at 24.4% against 7.8% for the distance control; the CTQW baseline and its variants sit below chance on AUC." src="docs/methods-light.svg" width="100%">
-</picture>
-
-*Orange = trivial controls; dashed line = the random control. The AUC panel diverges from
-0.5 because 0.5 is chance — bars to the left rank true allosteric residues **below**
-background. Regenerate with `python3 scripts/make_figure.py`.*
+> ⚠️ **The rankings in this section are confounded.** They use geometric proxy labels
+> and plain AUC, and section 9 shows both are dominated by distance — `ctrl_dist` is the
+> strongest thing here and anti-predictive on curated labels. The table below is kept as
+> the record of what the proxy benchmark said; **the figure for the metric the
+> conclusions rest on is at the top of this file**, and the confounded three-panel
+> version has moved to the appendix.
 
 `sig` = fraction with permutation p < 0.05 · `AUC` = ROC-AUC inside the candidate pool
 (0.5 = chance) · `hit5` = top-5 contains a true allosteric residue.
@@ -639,11 +647,6 @@ constant. The distance information really is gone. `ctrl_random` sits at **0.523
 than 0.500 — spatial smoothing plus clustered positives leaves a small positive bias — so
 **0.523 is the floor to read against, not 0.5**.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/stratified-dark.svg">
-  <img alt="Distance-stratified AUC on 72 curated targets. ALPS and ALPS_noresid clear the 0.523 random floor at 0.578-0.579; every quantum readout is at or below it, with quantum Fisher information lowest at 0.464." src="docs/stratified-light.svg" width="100%">
-</picture>
-
 All 72 curated targets, median 576 matched pairs each:
 
 | method | stratified AUC | vs the random floor |
@@ -842,6 +845,28 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
   signal — the weak `btb` numbers here are consistent with that warning.
 - Structural data from [RCSB PDB](https://www.rcsb.org/); UniProt mappings via
   [PDBe SIFTS](https://www.ebi.ac.uk/pdbe/).
+
+## Appendix — the confounded figure, kept for the record
+
+This was the headline figure until the curated check. It shows top-5 hit rate,
+permutation significance and plain ROC-AUC for 22 methods across 90 proxy-labelled
+targets, and it is **wrong in a specific, instructive way**: the labels place allosteric
+sites at a characteristic distance by construction, so plain AUC largely measures
+proximity, and the ordering it produces does not survive curated annotations. `btb_raw`
+appears near the bottom here and leads on curated labels; the CTQW baseline appears at
+random level here and sits above ALPS there.
+
+It is kept because deleting it would hide how convincing a confounded benchmark looks.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/methods-dark.svg">
+  <img alt="Superseded three-panel comparison on proxy labels: top-5 hit rate, permutation significance and plain ROC-AUC for 22 methods across 90 targets. Retained as a record of what the confounded benchmark showed." src="docs/methods-light.svg" width="100%">
+</picture>
+
+*Orange = trivial controls; dashed line = the random control. Regenerate both figures with
+`python3 scripts/make_figure.py`.*
+
+---
 
 ## References
 
