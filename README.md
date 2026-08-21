@@ -643,34 +643,48 @@ anything above chance is information the method carries beyond proximity.
 
 The control validates the metric before the methods are read: `ctrl_closeness` collapses
 from AUC 0.617 to **0.480**, as it must, since within a distance stratum it is nearly
-constant. The distance information really is gone. `ctrl_random` sits at **0.523** rather
-than 0.500 — spatial smoothing plus clustered positives leaves a small positive bias — so
-**0.523 is the floor to read against, not 0.5**.
+constant. The distance information really is gone.
+
+The floor needs care. A single random control landed at 0.523 and an earlier version of
+this file treated that as the floor. It is not: re-estimated from **25 independent random
+controls** ([`scripts/floor_and_tests.py`](scripts/floor_and_tests.py)) the floor is
+**0.496 ± 0.016**, ranging over [0.469, 0.529]. The 0.523 draw was a high one. Reading a
+0.05 margin against a number that itself moves by 0.03 is not an inference, so margins
+below ~0.03 mean nothing and the table reports paired per-target tests rather than
+eyeballed gaps.
 
 All 72 curated targets, median 576 matched pairs each:
 
-| method | stratified AUC | vs the random floor |
-|---|---|---|
-| **`ALPS_noresid`** | **0.579** | **+0.056** |
-| **`ALPS`** | **0.578** | **+0.055** |
-| `apop` | 0.541 | +0.018 |
-| `corrsite` | 0.526 | +0.003 |
-| CONTROL `ctrl_random` | 0.523 | — |
-| CONTROL `ctrl_dist` | 0.521 | −0.002 |
-| `btb` | 0.518 | −0.005 |
-| `ctqw_only` | 0.515 | −0.008 |
-| `btb_raw` | 0.510 | −0.013 |
-| `qasc_baseline` | 0.502 | −0.021 |
-| CONTROL `ctrl_burial` | 0.497 | −0.026 |
-| CONTROL `ctrl_closeness` | 0.480 | −0.043 |
-| **`qfi`** (quantum Fisher information) | **0.464** | **−0.059** |
-| `prs` | 0.455 | −0.068 |
+| method | stratified AUC | vs floor 0.496 | paired p vs random |
+|---|---|---|---|
+| **`ALPS_noresid`** | **0.579** | **+0.082** | **0.028** * |
+| **`ALPS`** | **0.578** | **+0.082** | **0.030** * |
+| `apop` | 0.541 | +0.045 | 0.51 |
+| `corrsite` | 0.526 | +0.030 | 0.89 |
+| CONTROL `ctrl_random` | 0.523 | — | reference draw |
+| CONTROL `ctrl_dist` | 0.521 | +0.024 | 0.66 |
+| `btb` | 0.518 | +0.022 | 0.92 |
+| `ctqw_only` | 0.515 | +0.019 | 0.74 |
+| `btb_raw` | 0.510 | +0.014 | 0.57 |
+| `qasc_baseline` | 0.502 | +0.006 | 0.47 |
+| CONTROL `ctrl_burial` | 0.497 | +0.000 | 0.50 |
+| CONTROL `ctrl_closeness` | 0.480 | −0.017 | 0.020 * |
+| **`qfi`** (quantum Fisher information) | **0.464** | **−0.032** | **0.012** * |
+| `prs` | 0.455 | −0.041 | 0.023 * |
+
+`*` = p < 0.05 uncorrected, Wilcoxon signed-rank over per-target values. **Nothing here
+survives Bonferroni** over 13 comparisons (threshold 0.0038), so read the starred rows as
+suggestive, not established.
 
 **This resolves the confusion in section 9.1, in both directions.**
 
-- **ALPS is the only method carrying substantial information beyond proximity**, and by a
-  clear margin — +0.055 over the random floor while everything else is within ±0.02. Its
-  sixth-place finish on plain AUC was the confound, not the method.
+- **ALPS is the only method carrying information beyond proximity that survives a paired
+  test** — +0.082 over the floor at p = 0.03, and it beats `apop`, the next method up, on
+  a direct paired comparison (Δ +0.045, p = 0.009). Its sixth-place finish on plain AUC
+  was the confound, not the method. But the p-value does not survive correction for the
+  13 comparisons made, so this is the best-supported claim here, not a settled one.
+- **`apop` is not distinguishable from the random control** (p = 0.51) despite its +0.045
+  margin, which is exactly why the margins needed a test rather than an eyeball.
 - **`btb_raw`'s first place was proximity.** It led plain AUC at 0.618 and lands at 0.510
   here, below the random floor.
 - **The quantum readouts carry essentially nothing beyond distance.** `qasc_baseline`
@@ -702,8 +716,7 @@ mode makes Gauss-Legendre quadrature under-resolve it silently — 6% error agai
 closed form. The fast-mode horizon 2π/λ_max fixes it. A quantum observable can fail for
 numerical reasons that look exactly like a physics result.)*
 
-**Caveats.** The 0.523 floor is estimated from one random control, so margins under about
-0.03 should not be read as real — that covers `apop` and `corrsite`. And this measures
+**Caveats.** This measures
 discrimination, not localisation: nothing here changes the fact that no method reaches
 DCC ≤ 4 Å on more than 1.9% of targets.
 
