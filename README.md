@@ -730,15 +730,57 @@ DCC ≤ 4 Å on more than 1.9% of targets.
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.6 What this does to the quantum conclusions
+### 9.6 Every quantum insertion point, re-tested on the correct metric
 
-The eight failed insertion points were measured on **proxy labels**, and section 9.1 shows
-plain-AUC rankings do not transfer between label sets. But section 9.4 re-tests the two
-central quantum readouts on curated labels with the proximity confound removed, and they
-land at 0.502 and 0.515 against a 0.523 random floor — carrying nothing beyond geometry.
-**The quantum negative therefore stands, and now rests on curated labels and a confound-free
-metric rather than on the proxy construction.** The remaining ablations should still be
-re-run the same way before each is quoted individually. The analytic results survive
+Three quantum readouts had been re-scored on curated labels with the confound
+removed; six had not, and rested on proxy labels and plain AUC.
+[`scripts/quantum_recheck.py`](scripts/quantum_recheck.py) closes that gap. Curated
+targets with N ≤ 600 (n = 37), distance-stratified, paired against a random control:
+
+| readout | stratified AUC | vs floor 0.496 | paired p |
+|---|---|---|---|
+| `mode_ipr_dipr` (eigenvector localisation) | 0.541 | +0.045 | 0.66 |
+| CONTROL `ctrl_random` | 0.531 | — | reference |
+| `eigvec_dpart` (active-site participation) | 0.530 | +0.034 | 0.82 |
+| `cpr_classical` | 0.526 | +0.030 | 0.99 |
+| `degeneracy_dgap` (level spacings) | 0.518 | +0.022 | 0.88 |
+| `enaqt` (calibrated dephasing) | 0.498 | +0.001 | 0.40 |
+| `chiral_asym` (directional asymmetry) | 0.472 | −0.025 | 0.16 |
+| `ctqw_only` | 0.459 | −0.037 | 0.077 |
+| `qpr_coherent` | 0.456 | −0.040 | 0.072 |
+| `qasc_baseline` | 0.453 | −0.043 | 0.070 |
+| `qasc_degseed` | 0.450 | −0.046 | 0.057 |
+| `qasc_normlap` | 0.442 | −0.055 | **0.022** * |
+
+**Not one quantum readout is distinguishable from the random control in the direction
+that would matter.** The four sitting above the floor have paired p-values of 0.66, 0.82,
+0.99 and 0.88 — as indistinguishable from noise as it is possible to be. The movement
+that *is* nominally significant runs the other way: `qasc_normlap` is below the control
+at p = 0.022.
+
+So the quantum negative now covers all nine per-residue insertion points on curated
+labels and a confound-free metric, not just the three checked earlier. It no longer rests
+on the proxy construction that manufactured it.
+
+**One honest wrinkle.** `ctqw_only` reads 0.459 here and 0.515 in section 9.4. Same
+method, same metric, different target subset — N ≤ 600 here against all 72 there. A swing
+of 0.056 from a subset change is larger than most of the margins in either table, which is
+the same lesson this file has now learned four times: at these sample sizes, subset choice
+moves results as much as method choice. It does not change the conclusion, because no
+quantum readout is above the floor in *either* subset, but it is why none of these numbers
+should be quoted to three decimals.
+
+### 9.7 What this does to the quantum conclusions
+
+The nine per-residue insertion points were originally measured on **proxy labels**, and
+section 9.1 shows plain-AUC rankings do not transfer between label sets. Sections 9.4 and
+9.6 re-test **all nine** on curated labels with the proximity confound removed. None is
+distinguishable from a random control in the favourable direction; the only nominally
+significant movement is a readout sitting *below* it. **The quantum negative therefore
+stands and no longer rests on the proxy construction that manufactured it.** Two
+insertion points are not covered by this re-check because they are not per-residue scores
+on this target set — cooperative QUBO selection (section 6) and the symmetric-multimer
+ablation (section 8) — and those two remain proxy-label results. The analytic results survive
 untouched, because they are algebra rather than measurement: an OTOC on a single-particle
 hopping model still equals four times the squared transfer amplitude, and non-Hermitian
 sensing still needs structure a contact graph does not have. The *empirical* rankings do
@@ -815,7 +857,8 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
              chiral.py  qfi.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
-             ablate_readouts.py  cooperative.py  diversify.py
+             ablate_readouts.py  cooperative.py  diversify.py  quantum_recheck.py
+             partial_auc.py  floor_and_tests.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
