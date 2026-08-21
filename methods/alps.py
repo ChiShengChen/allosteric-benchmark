@@ -61,9 +61,21 @@ from .common import (contact_graph, distal_nonanchor_mask, laplacian,
 
 __all__ = ["spectral_response", "distance_zscore", "alps_scores", "alps_select"]
 
-RADIUS = 10.0      # A, neighbourhood stiffened to mimic ligand binding
-K_MODES = 3        # lowest non-zero Kirchhoff eigenvalues used
-KAPPA = 1.0        # stiffening factor
+# Re-tuned on curated labels with the distance-stratified metric
+# (scripts/retune_alps.py). The original values -- radius 10, kappa 1 -- were
+# selected on 11 proxy-labelled targets with plain permutation significance, i.e.
+# against the distance artefact section 9 documents.
+#
+# Read the gain narrowly. Both halves of a protein-identity split independently
+# chose radius 12 / kappa 2 / K = 3, and it beat the old setting on both held-out
+# halves. But the split held out *identity*, not *size*: both halves came from the
+# same N <= 520 pool. On the full curated set the gain is +0.036 for N <= 520 and
+# -0.003 for N > 520, so overall +0.010 at p = 0.25 -- not significant. These
+# values are kept because they are better in the tuned range and neutral outside
+# it, not because retuning demonstrably improved the method.
+RADIUS = 12.0      # A, neighbourhood stiffened to mimic ligand binding
+K_MODES = 3        # lowest non-zero Kirchhoff eigenvalues used (unchanged)
+KAPPA = 2.0        # stiffening factor
 BANDWIDTH = 4.0    # A, distance-kernel width for the conditional z-score
 SHORTLIST = 26     # candidates the score shortlists before spatial selection
 

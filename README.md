@@ -720,7 +720,41 @@ numerical reasons that look exactly like a physics result.)*
 discrimination, not localisation: nothing here changes the fact that no method reaches
 DCC ≤ 4 Å on more than 1.9% of targets.
 
-### 9.5 What still holds
+### 9.5 Re-tuning ALPS, and a flaw it exposed in our own split
+
+ALPS's hyperparameters were chosen on 11 proxy-labelled targets with plain permutation
+significance — against the artefact section 9.2 describes.
+[`scripts/retune_alps.py`](scripts/retune_alps.py) re-tunes them on curated labels with
+the stratified metric, splitting the targets so the setting is chosen on one half and
+read on the other.
+
+Both halves independently chose **radius 12 Å, kappa 2, K = 3** (K unchanged), and it beat
+the old setting on the held-out half both ways, +0.038 and +0.030. That looked clean.
+
+It was not. On the full curated set:
+
+| | retuned | old | Δ |
+|---|---|---|---|
+| all 72 targets | 0.588 | 0.578 | +0.010, **p = 0.25** |
+| N ≤ 520 — the range tuning ran on | 0.621 | 0.585 | **+0.036** |
+| N > 520 — outside it | 0.571 | 0.575 | −0.003 |
+
+**The split held out protein identity but not size.** Both halves were drawn from the same
+`--max-n 520` pool, so a parameter set that only transfers within that size range passes
+the test while failing on the larger half of the benchmark. The gain is real inside the
+tuned range and absent outside it, and overall it is not significant.
+
+The retuned values are kept — better where tuned, neutral elsewhere — but the honest
+statement is that **re-tuning did not demonstrably improve ALPS**, and that the indicated
+next step is a radius that scales with structure size, tuned with size held out rather
+than only identity.
+
+Two things this does not change: ALPS still clears the floor on a paired test with the
+retuned values (+0.066, p = 0.026, against +0.055, p = 0.030 before), and the distance
+z-score is still neutral — `ALPS` and `ALPS_noresid` are identical to three decimals at
+0.588.
+
+### 9.6 What still holds
 
 - **Every method beats the random control on significance** (23–60% against 11.0%), so the
   task carries signal and the protocol detects it.
@@ -730,7 +764,7 @@ DCC ≤ 4 Å on more than 1.9% of targets.
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.6 Every quantum insertion point, re-tested on the correct metric
+### 9.7 Every quantum insertion point, re-tested on the correct metric
 
 Three quantum readouts had been re-scored on curated labels with the confound
 removed; six had not, and rested on proxy labels and plain AUC.
@@ -770,11 +804,11 @@ moves results as much as method choice. It does not change the conclusion, becau
 quantum readout is above the floor in *either* subset, but it is why none of these numbers
 should be quoted to three decimals.
 
-### 9.7 What this does to the quantum conclusions
+### 9.8 What this does to the quantum conclusions
 
 The nine per-residue insertion points were originally measured on **proxy labels**, and
 section 9.1 shows plain-AUC rankings do not transfer between label sets. Sections 9.4 and
-9.6 re-test **all nine** on curated labels with the proximity confound removed. None is
+9.7 re-test **all nine** on curated labels with the proximity confound removed. None is
 distinguishable from a random control in the favourable direction; the only nominally
 significant movement is a readout sitting *below* it. **The quantum negative therefore
 stands and no longer rests on the proxy construction that manufactured it.** Two
@@ -858,7 +892,7 @@ methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative
              chiral.py  qfi.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py  quantum_recheck.py
-             partial_auc.py  floor_and_tests.py
+             partial_auc.py  floor_and_tests.py  retune_alps.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
