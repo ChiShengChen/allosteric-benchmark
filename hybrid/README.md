@@ -69,10 +69,21 @@ run.py         gate 3, only if the prescreen leaves headroom
 
 Status is recorded in [`RESULTS.md`](RESULTS.md) as gates are passed or fail.
 
-**Current status: gates 0–2 all leave the door open**, so gate 3 is warranted. The
-prescreen produced two things that change how gate 3 must be run:
+**Status: all four gates run. The quantum kernel ties and does not win.**
 
-- a hard constraint — **quantum bandwidth ≲ 0.1**, above which the kernel provably
-  collapses to the identity;
-- a real target — **tuned RBF at γ = 25, AUC 0.563**, not the untuned default a naive
-  comparison would have used, which sat at 0.506.
+Gates 0–2 left the door open and produced the constraint that made gate 3 meaningful:
+bandwidth ≲ 0.1, and a *tuned* classical target rather than the untuned default. Gate 3
+then put both sides on identical features and the same training subsample:
+
+| | stratified AUC |
+|---|---|
+| best classical (`poly-4`) | **0.600** |
+| best quantum (`bw = 0.02`) | 0.592 |
+| control `ctrl_random` | 0.486 |
+
+Difference −0.008, paired p = 0.20. Both clear the random control; neither separates from
+the other. And the ranking shows the mechanism the literature named — the best classical
+kernel is the degree-4 polynomial that a bandwidth-tuned quantum kernel is known to
+collapse onto.
+
+Full numbers and the three prescreen repairs are in [`RESULTS.md`](RESULTS.md).

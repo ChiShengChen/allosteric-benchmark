@@ -77,6 +77,63 @@ Gate 3 is next: quantum kernel SVM and a shallow variational classifier against 
 linear / RBF / polynomial SVMs **on identical features**, protein-grouped CV, stratified
 metric, controls and paired tests.
 
+## Gate 3 — quantum kernel against tuned classical kernels, identical features
+
+44 curated targets, protein-grouped 5-fold CV, distance-stratified AUC. Every kernel sees
+the same balanced training subsample per fold (~600 points, half positive), so any
+difference is the kernel and not the sampling.
+
+| kernel | stratified AUC | vs floor | p vs random |
+|---|---|---|---|
+| **`poly-4`** | **0.600** | +0.104 | 0.0082 |
+| `quantum bw=0.02` | 0.592 | +0.095 | 0.0102 |
+| `linear` | 0.591 | +0.095 | 0.0135 |
+| `quantum bw=0.05` | 0.585 | +0.089 | 0.0052 |
+| `quantum bw=0.1` | 0.574 | +0.077 | 0.0076 |
+| `RBF γ=10` | 0.559 | +0.063 | 0.0215 |
+| `RBF γ=25` | 0.557 | +0.061 | 0.0215 |
+| `RBF γ=50` | 0.547 | +0.051 | 0.0363 |
+| CONTROL `ctrl_random` | 0.486 | −0.011 | reference |
+
+**Best quantum 0.592 against best classical 0.600 — difference −0.008, paired p = 0.20.**
+
+### What this shows
+
+**The quantum kernel ties.** It neither helps nor hurts: its best setting lands 0.008
+below the best classical kernel, well inside noise. Every kernel here, quantum and
+classical, clears the random control and lands between 0.55 and 0.60 — the same band as
+unlearned ALPS (0.576) and the logistic regression (0.603) from gate 0.
+
+**The predicted mechanism is visible in the ranking.** The literature's specific claim was
+that a bandwidth-tuned quantum kernel collapses onto a **degree-4 polynomial** kernel. Here
+the best classical kernel *is* `poly-4`, and the best quantum setting sits 0.008 beneath it
+while the tuned RBFs trail both by ~0.04. The quantum kernel is not doing something a
+polynomial kernel cannot; it is doing approximately that.
+
+**Bandwidth behaves as gate 1 said it would.** Performance falls monotonically as bandwidth
+rises — 0.592, 0.585, 0.574 at 0.02, 0.05, 0.1 — heading toward the identity collapse that
+gate 1 measured above 0.25. Had this been run at the default bandwidth of 1.0, the quantum
+kernel would have scored at chance and the conclusion would have looked far more dramatic
+and been far less informative.
+
+**Gate 2's ranking did not transfer.** RBF at γ = 25 was the best classical kernel on
+pooled plain AUC (0.563) and is among the worst here (0.557 against 0.600 for poly-4).
+Plain AUC on pooled residues and stratified AUC under protein-grouped CV disagree about
+which classical kernel is best — one more instance of the metric deciding the ranking.
+
+### Verdict on the work stream
+
+**No quantum advantage on this task, this feature set, and this sample size** — and the
+result is a tie rather than a collapse, which is the more informative outcome. It matches
+the prior the folder was opened with, but now on our own data, with the classical side
+tuned, at the only bandwidth where the quantum kernel is functional, and with the ranking
+showing the mechanism the literature named.
+
+What would change the answer: features carrying structure a polynomial kernel cannot
+reach, or a sample large enough for the quantum kernel's extra capacity to pay for itself.
+Neither is available here — §12 of the main README makes the same point about the input
+signature.
+
 ## Three repairs the gates needed, recorded because each is a standard failure
 
 1. **Accuracy at a 2.4% positive rate.** The first gate 2 reported linear = RBF = 0.967
