@@ -543,3 +543,37 @@ python3 scripts/ablate_readouts.py                # 頻譜量消融
   <source media="(prefers-color-scheme: dark)" srcset="methods-dark.svg">
   <img alt="已被取代的三面板比較圖(代理標籤)" src="methods-light.svg" width="100%">
 </picture>
+
+---
+
+## 附錄:任務、資料格式與方法一覽
+
+**任務**:輸入 `(N,3)` 的 Cβ 座標 + 活性位點殘基索引,輸出每殘基分數,再從
+「距 anchor ≥8 Å 且非 anchor」的候選池取前五名。主要指標是**距離分層 AUC**
+(只比較距離差 ≤2 Å 的正負例配對),因為原始 AUC 在兩種標籤下都被近度主導(§3.9)。
+
+**資料格式**:每個目標一個 `.npz`,欄位一致——
+`cb` `(N,3)` Cβ 座標(甘胺酸與缺失處以 Cα 代替)、
+`anchor` `(A,)` 活性位點的 0-based 索引、
+`y` `(N,)` 異位位點為 1(**僅供評估,方法看不到**)、
+`resnums` `(N,)` 作者殘基編號、
+`chain_id` `(N,)` 鏈標識(策展/多聚體/配對集才有)。
+
+**八個目標集**,三種標註規則,而**數字出自哪一集會改變它的意義**:
+
+| 目標集 | n | 標註 |
+|---|---|---|
+| `targets_curated/` | 97 | **專家策展**(ASBench/ASD),頭條結果所用 |
+| `targets/` `targets_b/` | 11 / 90 | 幾何代理,**已證實受混淆**(§3.9) |
+| `targets_multimer/` | 88 | 幾何代理,整個組裝體 |
+| `targets_negative/` | 90 | **無異位位點**的蛋白質層級負例 |
+| `matched_pos/` `matched_neg/` | 18 / 83 | 兩類走同一條 pipeline 的修正版 |
+| `qasc_targets/` | 3 | 受測方法自附 |
+
+**方法**:`ALPS`(局部加勁後讀最低三個 Kirchhoff 本徵值位移 + 距離 z-score,**唯一過地板**)、
+`apop`(同樣加勁,讀全域模態頻率位移,不用 anchor)、`corrsite`(GNM 快慢模態相關性)、
+`prs`(擾動響應掃描)、`btb`(bond-to-bond,Laplacian Green 函數)、
+`qasc_baseline` / `ctqw_only`(受測的 CTQW 方法)、`qfi`(量子 Fisher 資訊)、
+`enaqt` / `chiral` / `qpr`-`cpr`(去相干傳輸、手性漫步、擾動框架的相干與古典核),
+以及對照組 `ctrl_dist` / `ctrl_closeness` / `ctrl_burial` / `ctrl_random`——
+**每個結果都與它們並列報告**。

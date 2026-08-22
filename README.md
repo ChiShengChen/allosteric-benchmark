@@ -3,11 +3,11 @@
 Can a quantum walk predict allosteric sites better than classical methods on the same
 input? This repository was built to answer that. On a benchmark with **geometric proxy
 labels** the answer was a consistent no across seven insertion points — and then a check
-against **curated** allosteric annotations (section 9) reversed several of those
+against **curated** allosteric annotations (section 10) reversed several of those
 rankings, including that one. It ships the benchmark, the controls, the curated
 cross-check, and the code behind all of it.
 
-> **Read section 9 first.** The curated-label check invalidates three claims this
+> **Read section 10 first.** The curated-label check invalidates three claims this
 > repository previously led with, including "ALPS is the best method" and "the CTQW
 > baseline performs at random level". Both were properties of the proxy labels.
 
@@ -28,14 +28,14 @@ with `numpy` + `scipy`.
    finding did not survive a larger one.
 3. **ALPS**, a classical method that came out of the comparison: perturb the contact
    graph locally, read the shift in the three lowest Kirchhoff eigenvalues, z-score
-   against distance. Every design decision traces to a measurement in section 3 — and
-   section 9 shows the last of those decisions was tuned against an artefact.
+   against distance. Every design decision traces to a measurement in section 4 — and
+   section 10 shows the last of those decisions was tuned against an artefact.
 
 > **On the quantum framing.** The Kirchhoff matrix ALPS reads *is* the continuous-time
 > quantum walk Hamiltonian, so "how does ligand binding retune the walk's low-lying
 > spectrum" is a fair description of it. It is equally a description of the Gaussian
 > Network Model's slowest vibrational modes — the same numbers. **No quantum advantage
-> is claimed anywhere in this repository**, and section 5 records the seven attempts
+> is claimed anywhere in this repository**, and section 6 records the seven attempts
 > that failed to find one.
 
 ---
@@ -64,15 +64,15 @@ dephasing; degeneracy structure; eigenvector content; cooperative selection as a
 and degeneracy-sensitive readouts on symmetric multimers. The QUBO framing is
 mathematically sound — the objective is genuinely frustrated — but classical annealing
 solves it exactly at every size tested. Symmetry really does enrich spectral degeneracy
-(6.5% vs 3.1%), just not enough for interference to carry the signal. Section 5 records
+(6.5% vs 3.1%), just not enough for interference to carry the signal. Section 6 records
 what could still plausibly remain, and it is a *cost* argument, not an accuracy one.
 
-**What to distrust.** The main benchmark's labels are geometric proxies, and section 9
+**What to distrust.** The main benchmark's labels are geometric proxies, and section 10
 shows that matters more than any other caveat here: on curated annotations the method
 ranking reorders, ALPS drops to sixth, the CTQW baseline rises above it, and the distance
 bias that shaped several design decisions turns out to be an artefact of our own label
 construction (`ctrl_dist` goes from strongest-thing-tested to AUC 0.383, below chance).
-Four findings in this file reversed when the sample or the labels changed (sections 6, 8,
+Four findings in this file reversed when the sample or the labels changed (sections 7, 8,
 9, and the learned-combiner disclosure); every earlier reading is kept rather than
 deleted.
 
@@ -82,13 +82,97 @@ deleted.
 </picture>
 
 *The headline result, on the only metric here that is not confounded by proximity
-(section 9.4): curated labels, distance-matched pairs, bars measured from the random
+(section 10.4): curated labels, distance-matched pairs, bars measured from the random
 control rather than from zero. Only ALPS clears the floor; every quantum readout falls
 short of it.*
 
 ---
 
-## 1. Why build a new benchmark
+## 1. The task, the data, and the methods
+
+Orientation before the findings. Sections 2 onward assume this.
+
+### 1.1 The task
+
+**Input, for every method here:** a `(N, 3)` array of per-residue Cβ coordinates from a
+single structure, plus the integer indices of the active-site residues. Nothing else — no
+sequence, no MD trajectory, no bound reference structure, no learned weights.
+
+**Output:** an `(N,)` score per residue, higher meaning more likely to be part of an
+allosteric site. From that, the top five residues drawn from the *candidate pool* —
+residues at least 8 Å from every anchor residue and not themselves anchors — are the
+prediction.
+
+**Evaluation** happens at two levels, and they answer different questions:
+
+| level | question | how |
+|---|---|---|
+| residue | inside a protein known to have a site, is that site ranked highly? | **distance-stratified AUC** — only positive/negative pairs within 2 Å of each other in distance-to-active-site are compared, so proximity cannot inflate the score (§10.4) |
+| protein | does this protein have an allosteric site at all? | a per-protein statistic against protein-level negatives — **currently unresolved**, see §11 |
+
+Plain AUC, permutation significance and top-5 hit rate are also reported, but §10.3 shows
+plain AUC is dominated by proximity on both label sets, so it is context rather than
+result.
+
+### 1.2 The data format
+
+Every target set is a directory of `.npz` files, one protein per file, identical schema:
+
+| key | shape | meaning |
+|---|---|---|
+| `cb` | `(N, 3)` float | per-residue Cβ coordinates in Å; Cα substituted for glycine and wherever Cβ is unresolved |
+| `anchor` | `(A,)` int | 0-based indices into `cb` of the active-site residues |
+| `y` | `(N,)` int | 1 for allosteric-site residues, 0 otherwise; all zero in the negative sets |
+| `resnums` | `(N,)` int | author residue numbers, for mapping predictions back to the PDB |
+| `chain_id` | `(N,)` str | chain of each residue — present in the curated, multimer and matched sets |
+
+`y` is **evaluation only**; no method reads it. Loading one is a two-liner:
+
+```python
+d = np.load("data/targets_curated/4HO6.npz")
+scores = alps_scores(d["cb"], d["anchor"])          # the method sees these two arrays
+top5   = d["resnums"][alps_select(d["cb"], d["anchor"])]
+```
+
+### 1.3 The target sets
+
+Eight sets, built by three different labelling rules. **Which set a number comes from
+changes what it means**, which is the subject of §10.
+
+| set | n | labels | built for |
+|---|---|---|---|
+| `targets_curated/` | 97 | **expert-curated** allosteric + active site residues (ASBench / ASD via the ALLO paper's supplement) | the headline results — the only labels not of our own making |
+| `targets/` (tier-A) | 11 | geometric proxy, from entries whose RCSB text says *allosteric* | early tuning; superseded |
+| `targets_b/` (tier-B) | 90 | geometric proxy, generic query | the original held-out set; **confounded, see §10.2** |
+| `targets_multimer/` | 88 | geometric proxy, whole assembly per graph | the symmetric-oligomer test (§9) |
+| `targets_negative/` | 90 | **no allosteric site** — cofactor present, no drug-like ligand | protein-level negatives (§11) |
+| `matched_pos/` `matched_neg/` | 18 / 83 | both classes through one identical pipeline | the corrected protein-level test (§11.2) |
+| `qasc_targets/` | 3 | shipped with the method under test | reproducing its published result |
+
+Proxy labels mean "a drug-like molecule was crystallised here, ≥ 8 Å from the catalytic
+site" — the field's operational definition, and **not** an experimentally validated
+allosteric site. §10 measures how much that distinction matters, and the answer is: a lot.
+
+### 1.4 The methods, in one line each
+
+All in [`methods/`](methods/), same input signature, same post-processing.
+
+| | |
+|---|---|
+| **`ALPS`** | stiffen each residue's neighbourhood, read the shift in the three lowest Kirchhoff eigenvalues, z-score against distance — **the only method that clears the noise floor** (§10.6) |
+| `apop` | same stiffening, ranked by global mode-frequency shift; does not use the anchor |
+| `corrsite` | GNM slow- and fast-mode motion correlation to the anchor, max of the two Z-scores |
+| `prs` | perturbation-response scanning; the GNM covariance *is* the linear response operator |
+| `btb` / `btb_raw` | bond-to-bond propensity — Green's function of the weighted Laplacian, seeded at the anchor |
+| `qasc_baseline` | the CTQW method under test: infinite-time coherent transfer + IPR resonant transfer |
+| `ctqw_only` | that method's transfer channel alone |
+| `qfi` | quantum Fisher information about a local perturbation, read at the active site |
+| `enaqt`, `chiral`, `qpr`/`cpr` | dephasing-assisted transport; chiral (time-reversal-breaking) walks; the perturb-and-read framework with coherent vs classical kernels |
+| **controls** | `ctrl_dist`, `ctrl_closeness`, `ctrl_burial`, `ctrl_random` — no model at all. **Every result is reported beside them**, because on this task they are strong and several method ports do not beat them |
+
+---
+
+## 2. Why build a new benchmark
 
 The standard annotated benchmarks for this task are effectively offline:
 
@@ -125,7 +209,7 @@ allosteric regulatory site. Every conclusion drawn from this benchmark carries t
 
 ---
 
-## 2. Methods implemented
+## 3. Methods implemented
 
 All in [`methods/`](methods/); every one consumes only Cβ coordinates + anchor indices, and
 all share identical post-processing (rank percentile → graph smoothing) and candidate pool.
@@ -170,7 +254,7 @@ the sequence-only
 
 ---
 
-## 3. ALPS — the method this study converged on
+## 4. ALPS — the method this study converged on
 
 [`methods/alps.py`](methods/alps.py)
 
@@ -204,10 +288,10 @@ that shared spectrum.
 
 ---
 
-## 4. Results
+## 5. Results
 
 > ⚠️ **The rankings in this section are confounded.** They use geometric proxy labels
-> and plain AUC, and section 9 shows both are dominated by distance — `ctrl_dist` is the
+> and plain AUC, and section 10 shows both are dominated by distance — `ctrl_dist` is the
 > strongest thing here and anti-predictive on curated labels. The table below is kept as
 > the record of what the proxy benchmark said; **the figure for the metric the
 > conclusions rest on is at the top of this file**, and the confounded three-panel
@@ -237,7 +321,7 @@ that shared spectrum.
 | `prs` | 0% / 0.365 | 18.2% / 0.492 | 20.0% / 0.501 / 5.6% |
 | `enaqt` | 0% / 0.518 | 9.1% / 0.511 | 12.2% / 0.507 / 8.9% |
 
-### 4.1 The honest reading of ALPS
+### 5.1 The honest reading of ALPS
 
 On the 90 held-out targets ALPS beats the distance-only control on significance
 (48.9% vs 45.6%) but that margin is small and inside the confidence interval. The
@@ -257,7 +341,7 @@ the very top of it.
 The tier-A → tier-B drop (90.9% → 48.9%) has two causes and both should be stated:
 hyperparameters were selected on tier-A, and tier-A's labels are higher quality.
 
-### 4.2 Ablations — which observable actually carries the signal
+### 5.2 Ablations — which observable actually carries the signal
 
 Two ablations, both holding the graph, the perturbation and the distance
 conditioning fixed and varying only what is read out.
@@ -285,7 +369,7 @@ The last three are the *quantum-specific* quantities: degeneracy structure and
 eigenvector content, which is what would carry the signal if interference were doing
 the work. Plain eigenvalue magnitude beats all of them.
 
-### 4.3 On the CTQW baseline
+### 5.3 On the CTQW baseline
 
 Reported in both directions, because both are true:
 
@@ -306,7 +390,7 @@ This is a property of a specific scoring function on a specific set of targets, 
 judgement of the idea. Two of the fixes tried here (degree-weighted seeding, distance
 conditioning) improve it measurably.
 
-### 4.4 Nothing localises to 4 Å
+### 5.4 Nothing localises to 4 Å
 
 DCC ≤ 4 Å success — the localisation criterion used by `STINGAllo` [Omage et al. 2025] —
 is **0% for every method on every set**; median DCC is 18–33 Å. Note that
@@ -315,7 +399,7 @@ predicting near the protein centre — read it together with `hit5`, never alone
 
 ---
 
-## 5. Where a quantum walk can and cannot sit in this pipeline
+## 6. Where a quantum walk can and cannot sit in this pipeline
 
 Because the project started from a quantum-walk method, it is worth stating precisely
 what was tested and what remains open. Five insertion points have now been measured and
@@ -328,8 +412,8 @@ all five failed:
 | ENAQT / dephasing-assisted transport | γ swept from 0 to 3·J_max with the rate calibrated to the hopping scale; no optimum appears, results stay at chance |
 | Degeneracy structure (level spacings) under perturbation | 54.5%, versus 90.9% for plain eigenvalue shift |
 | Eigenvector content (active-site participation, mode IPR) | 63.6% and 36.4% |
-| **Cooperative site selection as a QUBO** (section 6) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
-| **Degeneracy-sensitive readouts on symmetric multimers** (section 8) | Symmetry really does enrich near-degeneracies (6.5% vs 3.1%), but the degeneracy-sensitive readout still loses to the plain eigenvalue shift there, and is marginally worse than in the asymmetric group |
+| **Cooperative site selection as a QUBO** (section 7) | The objective *is* frustrated and greedy *is* suboptimal, but classical annealing hits the exhaustive optimum at every size up to C(34,7) = 5.4M, the quadratic surrogate carries 37.9% error, and the exact optimum has no biological advantage over random selection |
+| **Degeneracy-sensitive readouts on symmetric multimers** (section 9) | Symmetry really does enrich near-degeneracies (6.5% vs 3.1%), but the degeneracy-sensitive readout still loses to the plain eigenvalue shift there, and is marginally worse than in the asymmetric group |
 | **Chiral quantum walks** — complex hopping phases breaking time-reversal symmetry ([`docs/quantum-observable-search.md`](docs/quantum-observable-search.md)) | The only candidate whose precondition our graphs satisfy — cycles, not degeneracy, 7.7–8.3 per residue. Scored by the directional asymmetry, which is *exactly zero* without chirality so it cannot collapse into the failed transfer amplitude. AUC 0.318–0.565 against 0.757 for the time-symmetric readout |
 | **Quantum kernels / quantum ML** | Not implemented, and the literature says not to: bandwidth-tuned quantum kernels become numerically indistinguishable from an RBF kernel, and on small tabular data classical beats quantum by 18.1 points with none of 29 paired comparisons significant. Our feature vector is 7-dimensional — exactly the regime where a quantum kernel collapses to a polynomial one. A classical learned combiner on our own data reaches AUC 0.668 (on 59 of 89 eligible targets — see the disclosure in that file), and that is what a quantum model would have to beat |
 
@@ -341,7 +425,7 @@ modes, so this is a *framing*, not an advantage, and this repository does not pr
 as one.
 
 Combinatorial selection was the most promising remaining candidate and it has now been
-tested too — section 6 has the full result. A second literature search then went looking specifically for quantum observables whose
+tested too — section 7 has the full result. A second literature search then went looking specifically for quantum observables whose
 signal does *not* come from degeneracy — OTOCs, operator growth, Krylov complexity,
 Lieb-Robinson light cones, quantum Fisher information, non-Hermitian sensing, chiral
 walks. Four more candidates measured, three closed, one still open:
@@ -363,7 +447,7 @@ one is not about accuracy at all:**
    it. Estimating spectral shifts by quantum phase estimation on the walk operator would
    not require full diagonalisation. This is the one framing that survives everything
    measured here, precisely because it never claims better predictions.
-2. ~~Symmetric multimers.~~ **Tested and closed** — section 8. Symmetry does enrich
+2. ~~Symmetric multimers.~~ **Tested and closed** — section 9. Symmetry does enrich
    spectral degeneracy, but not enough for an interference-dependent readout to win
    there. This was the last mechanism-backed candidate, and only the cost argument
    above now remains.
@@ -375,7 +459,7 @@ hyperparameter problem.
 
 ---
 
-## 6. Cooperative selection: is it a hard combinatorial problem?
+## 7. Cooperative selection: is it a hard combinatorial problem?
 
 Single-residue perturbation is easy classically. The biological question behind
 cooperative allostery is harder: which **set** of k residues, stiffened together,
@@ -450,7 +534,7 @@ hold up.
 
 ---
 
-## 7. What the controls found instead: diversify the top-k
+## 8. What the controls found instead: diversify the top-k
 
 The control that beat the QUBO turned out to be a real, cheap improvement to the
 method. The k highest-scoring residues are usually contacts of each other — mean
@@ -477,9 +561,9 @@ geometry, no QUBO and no quantum. It is exposed as `alps_select()`.
 
 ---
 
-## 8. Symmetric multimers: the hypothesis, and why it failed
+## 9. Symmetric multimers: the hypothesis, and why it failed
 
-Section 5 predicted that interference-dependent observables failed on single chains
+Section 6 predicted that interference-dependent observables failed on single chains
 because single chains have no eigenvalue degeneracies — and interference needs
 degeneracies. Symmetric oligomers are the regime where that premise differs, so this
 tests it there. `scripts/build_dataset_multimer.py` builds the benchmark keeping the
@@ -516,7 +600,7 @@ does not improve where degeneracy is enriched — it is marginally *worse* there
 (58.6% vs 61.3%). Doubling the near-degeneracy rate is evidently not enough to make
 interference carry the signal on a real, noisy contact graph.
 
-### 8.1 This corrects an earlier version of this file
+### 9.1 This corrects an earlier version of this file
 
 At n = 4 symmetric targets, `dgap` led `dlam` 100% to 75% and this section reported it
 as the one positive result for a quantum-specific observable. Expanding the benchmark
@@ -531,11 +615,11 @@ a mechanism predicted in advance, and a monotone-looking trend are **not** subst
 for sample size.
 
 **Standing count: seven insertion points for a quantum walk have now been measured,
-and all seven fail.** What survives is not an accuracy claim at all — see section 5.
+and all seven fail.** What survives is not an accuracy claim at all — see section 6.
 
 ---
 
-## 9. Curated labels — and the correction they force
+## 10. Curated labels — and the correction they force
 
 Every result above uses geometric proxy labels: "a drug-like molecule crystallised here,
 far from the catalytic site". Supplementary Table S2 of the ALLO benchmarking paper
@@ -563,7 +647,7 @@ targets; annotation mapping is near-lossless.
 | `prs` | 0.449 | 5.5% | 23.3% | 0.4465 | 1.4% |
 | CONTROL `ctrl_dist` | **0.383** | 2.7% | 20.5% | 0.9963 | 0.0% |
 
-### 9.1 Three published claims are wrong
+### 10.1 Three published claims are wrong
 
 **ALPS is not the best method.** It sits sixth on AUC. `btb_raw` — the bond-to-bond port
 this repo reported as weak — leads at 0.618 with the highest significance rate.
@@ -578,7 +662,7 @@ is what the design document credits for lifting it from 82% to 91% on the tuning
 curated labels it *costs* accuracy: `ALPS` 0.577 versus `ALPS_noresid` 0.598. The same
 happens to bond-to-bond, 0.532 with the correction versus 0.618 without.
 
-### 9.2 Why, and why it was predictable in hindsight
+### 10.2 Why, and why it was predictable in hindsight
 
 The proxy labels place allosteric sites at a characteristic distance from the cofactor
 site *by construction* — the builder requires ≥ 8 Å separation. That gave `ctrl_dist` its
@@ -602,7 +686,7 @@ ALPS is the best method on small structures and mid-pack on large ones; the CTQW
 is the reverse. Reporting the N ≤ 500 subset — which an earlier version of this file did —
 selected exactly the regime where our own method looks best.
 
-### 9.3 The finding that matters most: nothing beats closeness
+### 10.3 The finding that matters most: nothing beats closeness
 
 `ctrl_dist` scoring *below* chance means its mirror scores above it. Adding that mirror as
 a control — `ctrl_closeness = -distance`, one line, no graph, no model — gives:
@@ -632,7 +716,7 @@ otherwise — is not the best published score. It is 0.617 from one line of geom
 the honest question for any new observable is whether it adds anything *after
 conditioning on distance*. On the evidence here, none of the twelve does.
 
-### 9.4 Conditioning on distance: what actually carries signal
+### 10.4 Conditioning on distance: what actually carries signal
 
 Plain AUC is confounded in both directions — on proxy labels by distance, on curated
 labels by closeness — so it cannot answer "does this method know anything about
@@ -676,7 +760,7 @@ All 72 curated targets, median 576 matched pairs each:
 survives Bonferroni** over 13 comparisons (threshold 0.0038), so read the starred rows as
 suggestive, not established.
 
-**This resolves the confusion in section 9.1, in both directions.**
+**This resolves the confusion in section 10.1, in both directions.**
 
 - **ALPS is the only method carrying information beyond proximity that survives a paired
   test** — +0.082 over the floor at p = 0.03, and it beats `apop`, the next method up, on
@@ -752,10 +836,10 @@ one step at a time.
 discrimination, not localisation: nothing here changes the fact that no method reaches
 DCC ≤ 4 Å on more than 1.9% of targets.
 
-### 9.5 Re-tuning ALPS, and a flaw it exposed in our own split
+### 10.5 Re-tuning ALPS, and a flaw it exposed in our own split
 
 ALPS's hyperparameters were chosen on 11 proxy-labelled targets with plain permutation
-significance — against the artefact section 9.2 describes.
+significance — against the artefact section 10.2 describes.
 [`scripts/retune_alps.py`](scripts/retune_alps.py) re-tunes them on curated labels with
 the stratified metric, splitting the targets so the setting is chosen on one half and
 read on the other.
@@ -786,7 +870,7 @@ retuned values (+0.066, p = 0.026, against +0.055, p = 0.030 before), and the di
 z-score is still neutral — `ALPS` and `ALPS_noresid` are identical to three decimals at
 0.588.
 
-### 9.6 The expanded set: the first claim that survives correction
+### 10.6 The expanded set: the first claim that survives correction
 
 The curated set grew from 73 to **97 targets** after two fixes to the builder
 ([`scripts/build_dataset_curated.py`](scripts/build_dataset_curated.py)): the size cap
@@ -796,7 +880,7 @@ one structure) but output files were keyed on the PDB id alone, so the second of
 pair was overwritten and skipped as "already built". Files are now keyed on the full row
 tag. The median target grew from N = 579 to 806.
 
-That last part was expected to hurt: section 9.5 showed the re-tuned radius does not
+That last part was expected to hurt: section 10.5 showed the re-tuned radius does not
 transfer above N ≈ 520, and the new targets are mostly larger. It did not.
 
 Re-run on 96 evaluable targets ([`scripts/eval_expanded.py`](scripts/eval_expanded.py)):
@@ -825,14 +909,14 @@ the number of comparisons made.
 
 **And it is not a small-structure effect.** Split by size, the margin is stable across the
 whole range — +0.090 at N ≤ 520, +0.063 for 521–900, +0.067 above 900. The re-tuned
-*parameters* do not transfer above N ≈ 520 (section 9.5), but the *method* does. Those are
+*parameters* do not transfer above N ≈ 520 (section 10.5), but the *method* does. Those are
 different claims and the earlier finding did not license the stronger one.
 
 Everything else is unchanged in substance: no other method is distinguishable from the
 random control, the quantum readouts sit at 0.506–0.519 against a 0.519 floor, and `qfi`
 remains significantly *below* it.
 
-### 9.7 What still holds
+### 10.7 What still holds
 
 - **Every method beats the random control on significance** (23–60% against 11.0%), so the
   task carries signal and the protocol detects it.
@@ -842,7 +926,7 @@ remains significantly *below* it.
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.8 Every quantum insertion point, re-tested on the correct metric
+### 10.8 Every quantum insertion point, re-tested on the correct metric
 
 Three quantum readouts had been re-scored on curated labels with the confound
 removed; six had not, and rested on proxy labels and plain AUC.
@@ -874,7 +958,7 @@ So the quantum negative now covers all nine per-residue insertion points on cura
 labels and a confound-free metric, not just the three checked earlier. It no longer rests
 on the proxy construction that manufactured it.
 
-**One honest wrinkle.** `ctqw_only` reads 0.459 here and 0.515 in section 9.4. Same
+**One honest wrinkle.** `ctqw_only` reads 0.459 here and 0.515 in section 10.4. Same
 method, same metric, different target subset — N ≤ 600 here against all 72 there. A swing
 of 0.056 from a subset change is larger than most of the margins in either table, which is
 the same lesson this file has now learned four times: at these sample sizes, subset choice
@@ -882,17 +966,17 @@ moves results as much as method choice. It does not change the conclusion, becau
 quantum readout is above the floor in *either* subset, but it is why none of these numbers
 should be quoted to three decimals.
 
-### 9.9 What this does to the quantum conclusions
+### 10.9 What this does to the quantum conclusions
 
 The nine per-residue insertion points were originally measured on **proxy labels**, and
-section 9.1 shows plain-AUC rankings do not transfer between label sets. Sections 9.4 and
+section 10.1 shows plain-AUC rankings do not transfer between label sets. Sections 9.4 and
 9.8 re-test **all nine** on curated labels with the proximity confound removed. None is
 distinguishable from a random control in the favourable direction; the only nominally
 significant movement is a readout sitting *below* it. **The quantum negative therefore
 stands and no longer rests on the proxy construction that manufactured it.** Two
 insertion points are not covered by this re-check because they are not per-residue scores
-on this target set — cooperative QUBO selection (section 6) and the symmetric-multimer
-ablation (section 8) — and those two remain proxy-label results. The analytic results survive
+on this target set — cooperative QUBO selection (section 7) and the symmetric-multimer
+ablation (section 9) — and those two remain proxy-label results. The analytic results survive
 untouched, because they are algebra rather than measurement: an OTOC on a single-particle
 hopping model still equals four times the squared transfer amplitude, and non-Hermitian
 sensing still needs structure a contact graph does not have. The *empirical* rankings do
@@ -900,7 +984,7 @@ not survive, and this file no longer claims they do.
 
 ---
 
-## 10. The limitation that matters most: no method knows when to say no
+## 11. The limitation that matters most: no method knows when to say no
 
 Every result above answers one question — *given a protein that has an allosteric site,
 is that site ranked highly?* Every target in this repository has a known site by
@@ -934,7 +1018,7 @@ proximity. 1139 matched pairs, 55 positives against 90 negatives:
 sits in the 0.39–0.57 band. But before reading that as an answer, see below: the comparison
 turns out not to be controlled, and the reason is instructive.
 
-### 10.1 The control caught the experiment, and then the diagnosis got worse
+### 11.1 The control caught the experiment, and then the diagnosis got worse
 
 `ctrl_dist` — a statistic using nothing but distance to the active site — separates the
 two classes at **0.752**, far above any method. Two rounds of matching did not remove it:
@@ -964,9 +1048,9 @@ versus geometrically-derived anchors", and every score inherits that.
 **Conclusion: the protein-level question is unresolved, and this experiment cannot resolve
 it.** What stands is only that no method beats a trivial geometric control here — and
 `ctrl_dist`'s 0.74 is most likely reading the annotation-procedure difference rather than
-anything biological. Section 10.2 runs the fix and confirms that reading.
+anything biological. Section 11.2 runs the fix and confirms that reading.
 
-### 10.2 Running the fix: the diagnosis holds, the corrected experiment is underpowered
+### 11.2 Running the fix: the diagnosis holds, the corrected experiment is underpowered
 
 [`scripts/build_matched_sets.py`](scripts/build_matched_sets.py) rebuilds both classes
 through one procedure — every chain of the deposited structure, anchor = residues within
@@ -1004,7 +1088,7 @@ rounds did establish is worth keeping: the earlier 0.752 was an artefact of comp
 expert-annotated anchors against geometric ones, and anyone building a protein-level
 allosteric benchmark needs both classes to come through one pipeline. Resolving it needs
 negatives whose active sites are curated to the same standard as the positives, which is
-the same offline-database problem section 1 describes.
+the same offline-database problem section 2 describes.
 
 ### What this does and does not overturn
 
@@ -1025,13 +1109,13 @@ provably does not exist.
 
 ---
 
-## 11. Limitations
+## 12. Limitations
 
 1. **Proxy labels on the main benchmark.** `y` = "a drug-like molecule binds here, ≥ 8 Å
-   from the catalytic site", not an experimentally validated allosteric site. Section 9
+   from the catalytic site", not an experimentally validated allosteric site. Section 10
    re-runs everything on curated annotations and reports which conclusions survive; two
    did not.
-2. **The proxy benchmark has a distance bias that curated labels do not** (section 9).
+2. **The proxy benchmark has a distance bias that curated labels do not** (section 10).
    On proxy labels `ctrl_dist` reaches 42–55%; on curated labels it drops to AUC 0.473,
    below chance. Treat the proxy-label rankings as measuring our construction as much as
    the task.
@@ -1050,7 +1134,7 @@ provably does not exist.
 
 ---
 
-## 12. Reproduce
+## 13. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -1088,7 +1172,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ---
 
-## 13. Repository layout
+## 14. Repository layout
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
@@ -1098,18 +1182,21 @@ scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner
              partial_auc.py  floor_and_tests.py  retune_alps.py  tol_sweep.py
              eval_expanded.py  build_negatives.py  false_positive.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
+             build_dataset_curated.py  build_matched_sets.py  eval_curated_full.py
 data/
-  targets/       tier-A  (11 npz: cb, anchor, y, resnums)
-  targets_b/     tier-B  (90 npz, all evaluated)
-  targets_multimer/  oligomer set (88 npz, whole assembly per graph)
-  targets_curated/   97 npz with EXPERT-CURATED allosteric + active site residues
-  targets_negative/  90 npz protein-level negatives (cofactor, no modulator)
-  allo_tableS2.csv   the curated annotation table they are built from
-  qasc_targets/  the three targets shipped with QASC
-  manifest*.json results_*.json
+  targets_curated/    97  expert-curated labels   <- the headline set (see 1.3)
+  targets/            11  proxy labels, "allosteric"-tagged entries (tier-A)
+  targets_b/          90  proxy labels, generic query (tier-B)
+  targets_multimer/   88  proxy labels, whole assembly per graph
+  targets_negative/   90  protein-level negatives, no modulator present
+  matched_pos/        18  |  both classes rebuilt through one
+  matched_neg/        83  |  identical pipeline (see 11.2)
+  qasc_targets/        3  shipped with the method under test
+  allo_tableS2.csv        the curated annotation table the 97 are built from
+  manifest*.json  results_*.json
 docs/
   methods-light.svg / methods-dark.svg   the comparison figure above
-  stratified-light.svg / -dark.svg       the confound-free comparison (section 9.4)
+  stratified-light.svg / -dark.svg       the confound-free comparison (section 10.4)
   quantum-observable-search.md           second search: OTOC, Lieb-Robinson,
                                          non-Hermitian sensing, chiral walks
   quantum-observable-cards.jsonl         its 91 verified evidence cards
@@ -1127,7 +1214,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 14. Credits
+## 15. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)
