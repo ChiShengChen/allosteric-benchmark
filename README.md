@@ -174,6 +174,49 @@ All in [`methods/`](methods/), same input signature, same post-processing.
 
 ---
 
+### 1.5 A larger set, and the pipeline that builds it
+
+Sample size is this benchmark's binding constraint. The literature survey in
+[`docs/ai-model-landscape.md`](docs/ai-model-landscape.md) measured the field's
+standard training sets at 90–235 proteins, and our curated set is 97. To lift that
+ceiling, the **AlloBench dataset pipeline** by
+[leo07010](https://github.com/leo07010/allosteric-dataset-pipeline) is vendored whole
+into [`external/allobench-pipeline/`](external/allobench-pipeline/) (MIT, commit
+`4082cb1`) rather than referenced, so this repository runs standalone. It builds
+**1,439 samples over 327 unique UniProt accessions and 1,367 PDB structures**, with
+UniProt-grouped 5-fold splits and an active-site annotation present in every sample —
+which is what our seeded formulation ("given the active site, find the allosteric
+site") requires.
+
+```bash
+ALLOBENCH_CSV=/path/to/AlloBench.csv bash scripts/build_allobench.sh
+python3 scripts/adapt_allobench.py --selftest   # checks the converter without the data
+```
+
+**"Standalone" means no dependency on the upstream repository, not no external data.**
+AlloBench.csv is not redistributable under its own terms, so neither upstream nor this
+repository ships it, or any residue annotation derived from it. What is vendored is the
+machinery, not the dataset. See
+[`external/allobench-pipeline/PROVENANCE.md`](external/allobench-pipeline/PROVENANCE.md).
+
+Three differences from our curated set are load-bearing and are **not** smoothed over
+by the converter:
+
+| | curated (97) | AlloBench route (1,439) |
+|---|---|---|
+| coordinates | **Cβ** | **Cα** — `methods/alps.py` has `RADIUS = 12.0` tuned on Cβ contact geometry, so anything applied here must be re-tuned, holding out identity *and* size (§10.5) |
+| labels | expert annotation | **4 Å heavy-atom to the modulator** — §10 records three published conclusions that reversed when label construction changed, so the two sets are **evaluated separately, never pooled** |
+| conformation | holo (§12.4) | holo | 
+
+The last row is the one that does *not* change: both sets are modulator-bound, which
+§12.4 already discloses for ours. The integration neither introduces that limitation
+nor fixes it.
+
+Each converted `npz` carries `coord_type`, `label_rule`, `uniprot` and the upstream
+`fold`, so no downstream script can quietly assume Cβ, our label rule, or its own split.
+
+---
+
 ## 2. Why build a new benchmark
 
 The standard annotated benchmarks for this task are effectively offline:
@@ -1187,8 +1230,12 @@ scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner
              build_dataset_curated.py  build_matched_sets.py  eval_curated_full.py
 hybrid/      features.py  kernels.py  prescreen.py  run.py  vqc.py
              README.md  RESULTS.md   <- the classical/quantum ML work stream
+gnn/         data.py  model.py  run.py  README.md  RESULTS.md
+                                          <- residue-graph GNN (see 1.5)
+external/allobench-pipeline/            <- vendored dataset pipeline (see 1.5)
 data/
   targets_curated/    97  expert-curated labels   <- the headline set (see 1.3)
+  targets_allobench/  --  built by scripts/build_allobench.sh, not shipped (see 1.5)
   targets/            11  proxy labels, "allosteric"-tagged entries (tier-A)
   targets_b/          90  proxy labels, generic query (tier-B)
   targets_multimer/   88  proxy labels, whole assembly per graph
@@ -1205,6 +1252,9 @@ docs/
                                          non-Hermitian sensing, chiral walks
   quantum-observable-cards.jsonl         its 91 verified evidence cards
   qml-cards.jsonl                        61 more, on quantum kernels and dequantization
+  ai-model-landscape.md                  fourth search: which AI model families do this
+                                         task, and which run on our input signature
+  ai-model-cards.jsonl                   its 27 verified evidence cards
   RESULTS.zh.md              detailed results write-up (Chinese)
   methods.zh.md              method-by-method notes (Chinese)
   literature-review.zh.md    literature survey behind the method design (Chinese)
@@ -1229,6 +1279,14 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
   should not be read as definitive evaluations of those methods. In particular, the
   bond-to-bond authors explicitly warn that residue-level coarse-graining can lose the
   signal — the weak `btb` numbers here are consistent with that warning.
+- [`external/allobench-pipeline/`](external/allobench-pipeline/) is a verbatim vendored
+  copy of [leo07010/allosteric-dataset-pipeline](https://github.com/leo07010/allosteric-dataset-pipeline)
+  (MIT, Copyright (c) 2026 leo07010), commit `4082cb1`, brought in whole so this
+  repository runs standalone. **No pipeline code was modified** — our converter lives
+  outside that tree, in `scripts/adapt_allobench.py`, so the copy stays diffable
+  against upstream. Upstream's `LICENSE` is preserved and governs that directory.
+  Neither upstream nor this repository redistributes AlloBench/ASD annotations or
+  structures; see its `PROVENANCE.md`.
 - Structural data from [RCSB PDB](https://www.rcsb.org/); UniProt mappings via
   [PDBe SIFTS](https://www.ebi.ac.uk/pdbe/).
 

@@ -328,6 +328,36 @@ top5   = alps_select(cb, anchor, k=5)     # 回報用的 5 個殘基(已做空�
 - [`docs/literature-review.zh.md`](docs/literature-review.zh.md) — 文獻回顧(附 110 張逐字驗證的證據卡)
 - [`docs/quantum-observable-search.md`](docs/quantum-observable-search.md) — 第二、三輪量子觀測量搜尋(英文)
 - [`hybrid/RESULTS.md`](hybrid/RESULTS.md) — 古典/量子混合 ML 工作流的四道門檻結果(英文)
+- [`docs/ai-model-landscape.md`](docs/ai-model-landscape.md) — AI 模型家族調查:哪些家族能做這個任務,
+  哪些能在我們的輸入簽名下跑(英文,附 27 張逐字驗證證據卡)
+
+### 更大的資料集(§1.5)
+
+樣本量是這個 benchmark 的綁定約束——文獻調查量到這個任務的標準訓練集是 90–235 個蛋白質,
+我們的 curated set 是 97 個。因此把 [leo07010/allosteric-dataset-pipeline](https://github.com/leo07010/allosteric-dataset-pipeline)
+(MIT,commit `4082cb1`)**整份搬進** [`external/allobench-pipeline/`](external/allobench-pipeline/),
+而不是用引用的方式,讓這個 repo 能獨立運行。它建出 **1,439 個樣本、327 個獨立 UniProt、
+1,367 個 PDB 結構**,而且**每個樣本都有活性位點標註**——這正是我們「給定活性位點、找異位位點」
+的形式所必需的。
+
+```bash
+ALLOBENCH_CSV=/path/to/AlloBench.csv bash scripts/build_allobench.sh
+python3 scripts/adapt_allobench.py --selftest   # 無授權資料也能驗證轉接器
+```
+
+**「獨立運行」指的是不依賴上游 repo,不是不需要外部資料。** AlloBench.csv 依其條款不可轉散布,
+所以上游和我們都不附帶它,也不附帶任何由它衍生的殘基註釋。搬進來的是機器,不是資料集。
+
+三個差異是**承重的**,轉接器不會把它們抹平:
+
+| | curated(97) | AlloBench 路線(1,439) |
+|---|---|---|
+| 座標 | **Cβ** | **Cα** — ALPS 的 `RADIUS = 12.0` 是在 Cβ 上調的,套用前必須重調,而且要同時 held out 身分與大小(§10.5) |
+| 標註 | 專家策展 | **距調節劑 4 Å 重原子** — §10 記錄了三個因標註構造改變而反轉的結論,所以兩個集合**分開評估,絕不合併** |
+| 構象 | holo(§12.4) | holo |
+
+最後一列是**不會改變**的那一個:兩邊都是調節劑已結合的結構,§12.4 早已揭露我們自己也是如此。
+這次整合既沒有引入這個限制,也沒有修好它。
 
 ## 授權與致謝
 
