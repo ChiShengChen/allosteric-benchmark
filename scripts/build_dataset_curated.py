@@ -45,7 +45,7 @@ TABLE = os.path.join(HERE, "data", "allo_tableS2.csv")
 
 AA3 = {"ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE",
        "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL", "MSE"}
-MIN_LEN, MAX_LEN = 60, 1400
+MIN_LEN, MAX_LEN = 60, 2200
 MIN_SITE = 3
 
 
@@ -138,8 +138,9 @@ def main():
     kept, skipped = [], defaultdict(int)
 
     for r in rows:
-        pdb = r["pdb"].split("_")[0].strip()
-        path = os.path.join(OUT, f"{pdb}.npz")
+        tag = r["pdb"].strip()                 # e.g. 1CE8_1 and 1CE8_2 are two
+        pdb = tag.split("_")[0]                # distinct allosteric sites on one PDB
+        path = os.path.join(OUT, f"{tag}.npz")
         if os.path.exists(path):
             skipped["already built"] += 1
             continue
@@ -173,10 +174,10 @@ def main():
             path, cb=cb, anchor=np.asarray(a_idx, int), y=y,
             resnums=np.asarray([k[1] for k in keys], int),
             chain_id=np.asarray([k[0] for k in keys], dtype="U4"))
-        kept.append(dict(pdb=pdb, n=len(cb), n_anchor=len(a_idx), n_pos=int(y.sum()),
+        kept.append(dict(pdb=tag, n=len(cb), n_anchor=len(a_idx), n_pos=int(y.sum()),
                          mapped_allo=f"{len(y_idx)}/{len(allo)}",
                          mapped_act=f"{len(a_idx)}/{len(act)}"))
-        print(f"[{len(kept):3d}] {pdb} N={len(cb):4d} anchor={len(a_idx):3d} "
+        print(f"[{len(kept):3d}] {tag} N={len(cb):4d} anchor={len(a_idx):3d} "
               f"pos={int(y.sum()):3d}  allo mapped {len(y_idx)}/{len(allo)}", flush=True)
 
     print(f"\nkept {len(kept)} of {len(rows)} table rows -> {OUT}")
