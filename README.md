@@ -1,5 +1,7 @@
 # allosteric-benchmark
 
+**English** · [繁體中文](README.zh-TW.md)
+
 Can a quantum walk predict allosteric sites better than classical methods on the same
 input? This repository was built to answer that. On a benchmark with **geometric proxy
 labels** the answer was a consistent no across seven insertion points — and then a check

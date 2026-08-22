@@ -1,5 +1,7 @@
 # qasc_plus — 獨立 benchmark + 多方法比較框架
 
+> 本文件是 [README.zh-TW.md](../README.zh-TW.md) 的方法附冊 · [English README](../README.md)
+
 針對 [QASC](https://github.com/Arthur031221/quantum-allosteric-scanner)(CTQW 異位殘基排名)
 建立的**獨立驗證環境**:自建 family-declustered benchmark、實作文獻中的競爭方法、
 在同一套判準下比較,並附平庸對照組以檢驗任何結果是否只是假象。
