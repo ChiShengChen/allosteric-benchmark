@@ -964,12 +964,47 @@ versus geometrically-derived anchors", and every score inherits that.
 **Conclusion: the protein-level question is unresolved, and this experiment cannot resolve
 it.** What stands is only that no method beats a trivial geometric control here — and
 `ctrl_dist`'s 0.74 is most likely reading the annotation-procedure difference rather than
-anything biological.
+anything biological. Section 10.2 runs the fix and confirms that reading.
 
-The fix is to define anchors identically for both classes: re-derive the positives'
-anchors from the same 4.5 Å cofactor shell used for the negatives, discarding the curated
-active-site annotation for this experiment only, so the two classes differ in the
-allosteric label and nothing else. That is a build-and-evaluate cycle we have not run.
+### 10.2 Running the fix: the diagnosis holds, the corrected experiment is underpowered
+
+[`scripts/build_matched_sets.py`](scripts/build_matched_sets.py) rebuilds both classes
+through one procedure — every chain of the deposited structure, anchor = residues within
+4.5 Å of a cofactor — so the only difference left is the allosteric label. (A second
+inconsistency surfaced while writing it: the positives had kept every chain and the
+negatives only one, which by itself explained much of the size gap the earlier matching
+was fighting.)
+
+**The diagnosis was right.** Both confounds moved in the predicted direction:
+
+| | before the fix | after |
+|---|---|---|
+| active-site residues as a fraction of the protein | AUC 0.270 | 0.386 |
+| residue count | 0.783 | 0.631 |
+| **`ctrl_dist`, size- and shape-matched** | **0.741** | **0.646** |
+
+**But the corrected experiment cannot answer the question either.** Requiring a cofactor
+in the structure — the price of a common anchor rule — leaves only **18 positives** against
+83 negatives, and at that size the noise floor rises to meet everything:
+
+| method (top-5 statistic, N and Rg matched, 246 pairs) | AUC |
+|---|---|
+| `qasc_baseline` | 0.622 |
+| CONTROL `ctrl_dist` | 0.646 |
+| **CONTROL `ctrl_random`** | **0.563** |
+| `ALPS_raw` | 0.504 |
+| `ctqw_only` | 0.439 |
+
+With the random control at 0.563, nothing here is interpretable: ALPS sits *below* it, and
+the two values above it are within the noise a 18-positive comparison generates.
+
+**Where this leaves the question.** Unresolved, and now for a different reason than before
+— not a confound we failed to notice, but a sample too small to see through. What the two
+rounds did establish is worth keeping: the earlier 0.752 was an artefact of comparing
+expert-annotated anchors against geometric ones, and anyone building a protein-level
+allosteric benchmark needs both classes to come through one pipeline. Resolving it needs
+negatives whose active sites are curated to the same standard as the positives, which is
+the same offline-database problem section 1 describes.
 
 ### What this does and does not overturn
 
