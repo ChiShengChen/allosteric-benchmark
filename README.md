@@ -1185,6 +1185,8 @@ scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner
              eval_expanded.py  build_negatives.py  false_positive.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
              build_dataset_curated.py  build_matched_sets.py  eval_curated_full.py
+hybrid/      features.py  kernels.py  prescreen.py  run.py  vqc.py
+             README.md  RESULTS.md   <- the classical/quantum ML work stream
 data/
   targets_curated/    97  expert-curated labels   <- the headline set (see 1.3)
   targets/            11  proxy labels, "allosteric"-tagged entries (tier-A)

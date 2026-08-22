@@ -327,6 +327,7 @@ top5   = alps_select(cb, anchor, k=5)     # 回報用的 5 個殘基(已做空�
 - [`docs/methods.zh.md`](docs/methods.zh.md) — 逐方法說明與參考文獻
 - [`docs/literature-review.zh.md`](docs/literature-review.zh.md) — 文獻回顧(附 110 張逐字驗證的證據卡)
 - [`docs/quantum-observable-search.md`](docs/quantum-observable-search.md) — 第二、三輪量子觀測量搜尋(英文)
+- [`hybrid/RESULTS.md`](hybrid/RESULTS.md) — 古典/量子混合 ML 工作流的四道門檻結果(英文)
 
 ## 授權與致謝
 
