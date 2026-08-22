@@ -900,7 +900,60 @@ not survive, and this file no longer claims they do.
 
 ---
 
-## 10. Limitations
+## 10. The limitation that matters most: no method knows when to say no
+
+Every result above answers one question — *given a protein that has an allosteric site,
+is that site ranked highly?* Every target in this repository has a known site by
+construction, so the question a user faces first has never been asked: **given a protein
+with no allosteric site, does the method say so, or name five residues anyway?**
+
+A method that always returns five residues scores well on a positives-only benchmark and
+sends an experimental group after sites that do not exist.
+
+[`scripts/build_negatives.py`](scripts/build_negatives.py) builds 90 protein-level
+negatives the way the ALLO benchmarking paper built its 87 orthosteric-only proteins: a
+cofactor defines the active site exactly as for the positives, and **no drug-like ligand
+is present anywhere**, so no allosteric site is annotated.
+[`scripts/false_positive.py`](scripts/false_positive.py) then asks whether any per-protein
+statistic separates the two classes.
+
+**The comparison is confounded before it starts, and the control shows it.** The negatives
+are systematically smaller — median N 327 against 532 — so `ctrl_size` alone separates the
+sets at **AUC 0.783**, and no method beat that. Matching positives to negatives within
+0.25 in log N spends the size information, the same way the residue-level metric spends
+proximity. 1139 matched pairs, 55 positives against 90 negatives:
+
+| statistic | `ALPS_raw` | `ctqw_only` | `qasc_baseline` | `corrsite` | CONTROL `ctrl_burial` |
+|---|---|---|---|---|---|
+| highest score | 0.537 | 0.528 | 0.532 | 0.494 | 0.392 |
+| mean of top 5 | **0.566** | 0.500 | 0.502 | 0.495 | 0.400 |
+| peakiness | 0.404 | 0.519 | 0.262 | 0.498 | 0.413 |
+| kurtosis | 0.399 | 0.536 | 0.357 | 0.513 | 0.438 |
+
+**Nothing exceeds 0.57.** The best cell is ALPS's top-5 mean at 0.566, and the whole table
+lives in the 0.39–0.57 band. **No method here — including the one that survives every
+residue-level check — can tell whether a protein has an allosteric site at all.**
+
+### What this does and does not overturn
+
+It does **not** touch the residue-level result. ALPS's +0.094 at p = 0.0030 is a claim
+about ranking *within* a protein known to have a site, and that claim stands.
+
+It bounds what the method is for. ALPS is usable when you already know a site exists and
+want candidates; it is **not** usable to screen a protein set for which targets are worth
+pursuing, because on that task it is indistinguishable from a coin flip. Since screening is
+the more common industrial question, this is the gap that matters most, and it is
+unaddressed by anything in this repository.
+
+⚠️ **The negatives are absence of evidence.** "No allosteric modulator has been
+crystallised with this protein" is not "this protein has no allosteric site". Some
+negatives are certainly mislabelled, which would depress any real separation. The honest
+statement is therefore the weaker one: we **cannot demonstrate** the ability, not that it
+provably does not exist.
+
+---
+
+## 11. Limitations
 
 1. **Proxy labels on the main benchmark.** `y` = "a drug-like molecule binds here, ≥ 8 Å
    from the catalytic site", not an experimentally validated allosteric site. Section 9
@@ -925,7 +978,7 @@ not survive, and this file no longer claims they do.
 
 ---
 
-## 11. Reproduce
+## 12. Reproduce
 
 ```bash
 pip install numpy scipy
@@ -963,7 +1016,7 @@ top5   = alps_select(cb, anchor, k=5)     # 5 residues to report (diversified)
 
 ---
 
-## 12. Repository layout
+## 13. Repository layout
 
 ```
 methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative.py
@@ -971,13 +1024,14 @@ methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py  quantum_recheck.py
              partial_auc.py  floor_and_tests.py  retune_alps.py  tol_sweep.py
-             eval_expanded.py
+             eval_expanded.py  build_negatives.py  false_positive.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
   targets_multimer/  oligomer set (88 npz, whole assembly per graph)
   targets_curated/   97 npz with EXPERT-CURATED allosteric + active site residues
+  targets_negative/  90 npz protein-level negatives (cofactor, no modulator)
   allo_tableS2.csv   the curated annotation table they are built from
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
@@ -1001,7 +1055,7 @@ against the source PDF. 110 of 112 evidence cards passed; the 2 that failed are 
 
 ---
 
-## 13. Credits
+## 14. Credits
 
 - `data/qasc_targets/` and the `qasc_*` method implementations reproduce
   [Arthur031221/quantum-allosteric-scanner](https://github.com/Arthur031221/quantum-allosteric-scanner)

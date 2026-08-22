@@ -1,0 +1,542 @@
+[
+ {
+  "pdb": "10BL",
+  "chain": "A",
+  "n": 334,
+  "n_anchor": 17
+ },
+ {
+  "pdb": "10EE",
+  "chain": "A",
+  "n": 354,
+  "n_anchor": 22
+ },
+ {
+  "pdb": "10JU",
+  "chain": "B",
+  "n": 252,
+  "n_anchor": 18
+ },
+ {
+  "pdb": "11KO",
+  "chain": "A",
+  "n": 530,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "12AS",
+  "chain": "A",
+  "n": 327,
+  "n_anchor": 17
+ },
+ {
+  "pdb": "13BB",
+  "chain": "A",
+  "n": 552,
+  "n_anchor": 19
+ },
+ {
+  "pdb": "13JB",
+  "chain": "A",
+  "n": 305,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1A27",
+  "chain": "A",
+  "n": 285,
+  "n_anchor": 31
+ },
+ {
+  "pdb": "1A2B",
+  "chain": "A",
+  "n": 178,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1A4R",
+  "chain": "A",
+  "n": 190,
+  "n_anchor": 16
+ },
+ {
+  "pdb": "1A50",
+  "chain": "B",
+  "n": 390,
+  "n_anchor": 20
+ },
+ {
+  "pdb": "1A59",
+  "chain": "A",
+  "n": 377,
+  "n_anchor": 20
+ },
+ {
+  "pdb": "1A5Z",
+  "chain": "A",
+  "n": 312,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1AFS",
+  "chain": "A",
+  "n": 319,
+  "n_anchor": 31
+ },
+ {
+  "pdb": "1AG9",
+  "chain": "A",
+  "n": 175,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1AHE",
+  "chain": "A",
+  "n": 396,
+  "n_anchor": 15
+ },
+ {
+  "pdb": "1AI2",
+  "chain": "A",
+  "n": 414,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "1AJ8",
+  "chain": "A",
+  "n": 371,
+  "n_anchor": 18
+ },
+ {
+  "pdb": "1AKA",
+  "chain": "A",
+  "n": 401,
+  "n_anchor": 15
+ },
+ {
+  "pdb": "1AN9",
+  "chain": "A",
+  "n": 340,
+  "n_anchor": 41
+ },
+ {
+  "pdb": "1ANK",
+  "chain": "A",
+  "n": 214,
+  "n_anchor": 38
+ },
+ {
+  "pdb": "1AS0",
+  "chain": "A",
+  "n": 313,
+  "n_anchor": 29
+ },
+ {
+  "pdb": "1ATP",
+  "chain": "E",
+  "n": 334,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1ATR",
+  "chain": "A",
+  "n": 383,
+  "n_anchor": 19
+ },
+ {
+  "pdb": "1AUX",
+  "chain": "A",
+  "n": 292,
+  "n_anchor": 19
+ },
+ {
+  "pdb": "1AY5",
+  "chain": "A",
+  "n": 394,
+  "n_anchor": 15
+ },
+ {
+  "pdb": "1AZS",
+  "chain": "C",
+  "n": 339,
+  "n_anchor": 27
+ },
+ {
+  "pdb": "1B0U",
+  "chain": "A",
+  "n": 258,
+  "n_anchor": 13
+ },
+ {
+  "pdb": "1B1C",
+  "chain": "A",
+  "n": 166,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1B23",
+  "chain": "P",
+  "n": 405,
+  "n_anchor": 22
+ },
+ {
+  "pdb": "1B2R",
+  "chain": "A",
+  "n": 295,
+  "n_anchor": 18
+ },
+ {
+  "pdb": "1B38",
+  "chain": "A",
+  "n": 290,
+  "n_anchor": 22
+ },
+ {
+  "pdb": "1B4S",
+  "chain": "A",
+  "n": 150,
+  "n_anchor": 12
+ },
+ {
+  "pdb": "1B5O",
+  "chain": "A",
+  "n": 382,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1B5T",
+  "chain": "A",
+  "n": 275,
+  "n_anchor": 26
+ },
+ {
+  "pdb": "1B62",
+  "chain": "A",
+  "n": 331,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1B8A",
+  "chain": "A",
+  "n": 438,
+  "n_anchor": 16
+ },
+ {
+  "pdb": "1B8U",
+  "chain": "A",
+  "n": 327,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "1BC5",
+  "chain": "A",
+  "n": 269,
+  "n_anchor": 25
+ },
+ {
+  "pdb": "1BF3",
+  "chain": "A",
+  "n": 391,
+  "n_anchor": 37
+ },
+ {
+  "pdb": "1BFD",
+  "chain": "A",
+  "n": 523,
+  "n_anchor": 18
+ },
+ {
+  "pdb": "1BG2",
+  "chain": "A",
+  "n": 323,
+  "n_anchor": 11
+ },
+ {
+  "pdb": "1BIF",
+  "chain": "A",
+  "n": 432,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1BJO",
+  "chain": "A",
+  "n": 360,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1BKJ",
+  "chain": "A",
+  "n": 230,
+  "n_anchor": 13
+ },
+ {
+  "pdb": "1BOB",
+  "chain": "A",
+  "n": 306,
+  "n_anchor": 25
+ },
+ {
+  "pdb": "1BQ6",
+  "chain": "A",
+  "n": 387,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1BW9",
+  "chain": "A",
+  "n": 350,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1BWC",
+  "chain": "A",
+  "n": 461,
+  "n_anchor": 41
+ },
+ {
+  "pdb": "1BX0",
+  "chain": "A",
+  "n": 296,
+  "n_anchor": 19
+ },
+ {
+  "pdb": "1BYQ",
+  "chain": "A",
+  "n": 213,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1BYU",
+  "chain": "A",
+  "n": 202,
+  "n_anchor": 16
+ },
+ {
+  "pdb": "1C0I",
+  "chain": "A",
+  "n": 363,
+  "n_anchor": 42
+ },
+ {
+  "pdb": "1C0N",
+  "chain": "A",
+  "n": 404,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1C1Y",
+  "chain": "A",
+  "n": 167,
+  "n_anchor": 26
+ },
+ {
+  "pdb": "1C4K",
+  "chain": "A",
+  "n": 728,
+  "n_anchor": 28
+ },
+ {
+  "pdb": "1C80",
+  "chain": "A",
+  "n": 191,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1CBF",
+  "chain": "A",
+  "n": 239,
+  "n_anchor": 19
+ },
+ {
+  "pdb": "1CDK",
+  "chain": "A",
+  "n": 342,
+  "n_anchor": 24
+ },
+ {
+  "pdb": "1CDO",
+  "chain": "A",
+  "n": 374,
+  "n_anchor": 28
+ },
+ {
+  "pdb": "1CF3",
+  "chain": "A",
+  "n": 581,
+  "n_anchor": 44
+ },
+ {
+  "pdb": "1CKN",
+  "chain": "A",
+  "n": 317,
+  "n_anchor": 15
+ },
+ {
+  "pdb": "1CNF",
+  "chain": "A",
+  "n": 260,
+  "n_anchor": 32
+ },
+ {
+  "pdb": "1COY",
+  "chain": "A",
+  "n": 501,
+  "n_anchor": 42
+ },
+ {
+  "pdb": "1CQX",
+  "chain": "A",
+  "n": 403,
+  "n_anchor": 43
+ },
+ {
+  "pdb": "1CSN",
+  "chain": "A",
+  "n": 293,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "1CZH",
+  "chain": "A",
+  "n": 169,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1D2N",
+  "chain": "A",
+  "n": 246,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1D4D",
+  "chain": "A",
+  "n": 560,
+  "n_anchor": 107
+ },
+ {
+  "pdb": "1D5C",
+  "chain": "A",
+  "n": 162,
+  "n_anchor": 20
+ },
+ {
+  "pdb": "1D6S",
+  "chain": "A",
+  "n": 322,
+  "n_anchor": 18
+ },
+ {
+  "pdb": "1D8T",
+  "chain": "A",
+  "n": 391,
+  "n_anchor": 16
+ },
+ {
+  "pdb": "1DAP",
+  "chain": "A",
+  "n": 320,
+  "n_anchor": 22
+ },
+ {
+  "pdb": "1DAW",
+  "chain": "A",
+  "n": 327,
+  "n_anchor": 21
+ },
+ {
+  "pdb": "1DDG",
+  "chain": "A",
+  "n": 374,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "1DEH",
+  "chain": "A",
+  "n": 374,
+  "n_anchor": 32
+ },
+ {
+  "pdb": "1DG8",
+  "chain": "A",
+  "n": 159,
+  "n_anchor": 28
+ },
+ {
+  "pdb": "1DGD",
+  "chain": "A",
+  "n": 431,
+  "n_anchor": 12
+ },
+ {
+  "pdb": "1DIA",
+  "chain": "B",
+  "n": 295,
+  "n_anchor": 23
+ },
+ {
+  "pdb": "1DJE",
+  "chain": "A",
+  "n": 383,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1DJL",
+  "chain": "A",
+  "n": 182,
+  "n_anchor": 30
+ },
+ {
+  "pdb": "1DL5",
+  "chain": "A",
+  "n": 317,
+  "n_anchor": 28
+ },
+ {
+  "pdb": "1DMA",
+  "chain": "B",
+  "n": 189,
+  "n_anchor": 13
+ },
+ {
+  "pdb": "1DNL",
+  "chain": "A",
+  "n": 199,
+  "n_anchor": 14
+ },
+ {
+  "pdb": "1DOB",
+  "chain": "A",
+  "n": 394,
+  "n_anchor": 33
+ },
+ {
+  "pdb": "1DQS",
+  "chain": "A",
+  "n": 381,
+  "n_anchor": 31
+ },
+ {
+  "pdb": "1DR5",
+  "chain": "A",
+  "n": 186,
+  "n_anchor": 30
+ },
+ {
+  "pdb": "1DS6",
+  "chain": "A",
+  "n": 181,
+  "n_anchor": 16
+ },
+ {
+  "pdb": "1DSS",
+  "chain": "G",
+  "n": 332,
+  "n_anchor": 25
+ },
+ {
+  "pdb": "1DTW",
+  "chain": "A",
+  "n": 382,
+  "n_anchor": 18
+ }
+]
