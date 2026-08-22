@@ -90,6 +90,32 @@ def collect(pattern, label, cache, max_n):
         print(f"  {name}", flush=True)
 
 
+def auc_matched(pos_v, pos_k, neg_v, neg_k, tols):
+    """AUC over pairs matched on every key in `pos_k` / `neg_k`.
+
+    Matching on residue count alone is not enough: after it, radius of gyration
+    still separates the sets at AUC 0.601, and a distance-based statistic inherits
+    that. Passing (N, Rg) spends both.
+    """
+    pv = np.asarray(pos_v, float); nv = np.asarray(neg_v, float)
+    okp, okn = np.isfinite(pv), np.isfinite(nv)
+    pv, nv = pv[okp], nv[okn]
+    if len(pv) < 5 or len(nv) < 5:
+        return np.nan, 0
+    close = np.ones((len(pv), len(nv)), bool)
+    for key, tol in zip(pos_k, tols):
+        pass
+    for (pk, nk), tol in zip(zip(pos_k, neg_k), tols):
+        a = np.log(np.asarray(pk, float)[okp])
+        b = np.log(np.asarray(nk, float)[okn])
+        close &= np.abs(a[:, None] - b[None, :]) <= tol
+    if close.sum() < 50:
+        return np.nan, int(close.sum())
+    d = pv[:, None] - nv[None, :]
+    w = (d > 0).astype(float) + 0.5 * (d == 0)
+    return float(w[close].sum() / close.sum()), int(close.sum())
+
+
 def auc_size_matched(pos_v, pos_n, neg_v, neg_n, tol=0.25):
     """AUC over positive/negative pairs matched on log size.
 
@@ -155,21 +181,30 @@ def main():
             cells.append(f"{auc(p, q):7.3f}")
         print(f"{m:16s} " + "  ".join(cells))
 
-    pn = np.array([v["n"] for v in pos if methods[0] in v], float)
-    nn = np.array([v["n"] for v in neg if methods[0] in v], float)
-    _, npairs = auc_size_matched([0] * len(pn), pn, [0] * len(nn), nn)
-    print(f"\nSIZE-MATCHED (pairs within 0.25 in log N; {npairs} pairs)")
-    print(f"{'method':16s} " + "  ".join(f"{s:>7s}" for s in stat_names))
-    for m in methods:
-        cells = []
-        for st in stat_names:
-            p = [v[m][st] for v in pos if m in v]
-            q = [v[m][st] for v in neg if m in v]
-            pnn = [v["n"] for v in pos if m in v]
-            nnn = [v["n"] for v in neg if m in v]
-            au, _ = auc_size_matched(p, pnn, q, nnn)
-            cells.append("      —" if au != au else f"{au:7.3f}")
-        print(f"{m:16s} " + "  ".join(cells))
+    methods = methods + [m for m in ("ctrl_random", "ctrl_dist")
+                         if any(m in v for v in pos) and m not in methods]
+    for label, tols in (("SIZE-MATCHED (log N <= 0.25)", (0.25,)),
+                        ("SIZE + SHAPE MATCHED (log N <= 0.25, log Rg <= 0.10)",
+                         (0.25, 0.10))):
+        keys = ("n",) if len(tols) == 1 else ("n", "rg")
+        pk0 = [[v[k] for v in pos if methods[0] in v] for k in keys]
+        nk0 = [[v[k] for v in neg if methods[0] in v] for k in keys]
+        _, npairs = auc_matched([0.0] * len(pk0[0]), pk0,
+                                [1.0] * len(nk0[0]), nk0, tols)
+        print(f"\n{label}   ({npairs} pairs)")
+        print(f"{'method':16s} " + "  ".join(f"{s:>7s}" for s in stat_names))
+        for m in methods:
+            if not any(m in v for v in pos):
+                continue
+            cells = []
+            for st in stat_names:
+                p = [v[m][st] for v in pos if m in v]
+                q = [v[m][st] for v in neg if m in v]
+                pk = [[v[k] for v in pos if m in v] for k in keys]
+                nk = [[v[k] for v in neg if m in v] for k in keys]
+                au, _ = auc_matched(p, pk, q, nk, tols)
+                cells.append("      —" if au != au else f"{au:7.3f}")
+            print(f"{m:16s} " + "  ".join(cells))
 
 
 if __name__ == "__main__":

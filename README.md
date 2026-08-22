@@ -931,20 +931,45 @@ proximity. 1139 matched pairs, 55 positives against 90 negatives:
 | kurtosis | 0.399 | 0.536 | 0.357 | 0.513 | 0.438 | — | — |
 
 **No method exceeds 0.57.** The best cell is ALPS's top-5 mean at 0.566, and every method
-sits in the 0.39–0.57 band. On this evidence, none of them — including the one that
-survives every residue-level check — can tell whether a protein has an allosteric site.
+sits in the 0.39–0.57 band. But before reading that as an answer, see below: the comparison
+turns out not to be controlled, and the reason is instructive.
 
-**But the control says the experiment is still confounded.** Adding `ctrl_dist` to the
-size-matched comparison gives **0.752** — a statistic that uses nothing but distance to the
-active site separates the two classes far better than any method does. Matching on residue
-count evidently does not remove every systematic difference between the sets; the negatives
-differ in spatial extent as well as in residue number.
+### 10.1 The control caught the experiment, and then the diagnosis got worse
 
-So the defensible claim is the narrower one: **no method here beats a trivial geometric
-control at protein-level discrimination**, and whether any of them could do so on a
-properly matched negative set is not yet established. Matching on radius of gyration as
-well as residue count is the obvious next step, and until it is done this section reports a
-failure to demonstrate the ability rather than a demonstration of its absence.
+`ctrl_dist` — a statistic using nothing but distance to the active site — separates the
+two classes at **0.752**, far above any method. Two rounds of matching did not remove it:
+
+| matching | pairs | `ctrl_dist` | `ALPS_raw` |
+|---|---|---|---|
+| residue count only | 1139 | 0.755 | 0.537 |
+| residue count **and radius of gyration** | 734 | **0.741** | 0.522 |
+
+Matching on shape barely moved it, so the difference is not overall size or extent.
+Measuring directly what else separates the two sets:
+
+| property | positives | negatives | AUC |
+|---|---|---|---|
+| active site's offset from the protein centre, relative to Rg | 0.581 | 0.486 | 0.641 |
+| **active-site residues as a fraction of the protein** | **0.042** | **0.072** | **0.270** |
+
+**The anchors were defined by two different procedures.** The positives take their active
+site from the curated table — expert annotation, tight. The negatives take theirs from our
+own geometric rule, every residue within 4.5 Å of a cofactor — which is systematically
+looser, 1.7× larger as a fraction of the protein.
+
+Every method in this repository is seeded at the anchor. So this comparison is not
+"proteins with a site versus proteins without"; it is partly "expert-annotated anchors
+versus geometrically-derived anchors", and every score inherits that.
+
+**Conclusion: the protein-level question is unresolved, and this experiment cannot resolve
+it.** What stands is only that no method beats a trivial geometric control here — and
+`ctrl_dist`'s 0.74 is most likely reading the annotation-procedure difference rather than
+anything biological.
+
+The fix is to define anchors identically for both classes: re-derive the positives'
+anchors from the same 4.5 Å cofactor shell used for the negatives, discarding the curated
+active-site annotation for this experiment only, so the two classes differ in the
+allosteric label and nothing else. That is a build-and-evaluate cycle we have not run.
 
 ### What this does and does not overturn
 
