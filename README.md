@@ -716,6 +716,38 @@ mode makes Gauss-Legendre quadrature under-resolve it silently — 6% error agai
 closed form. The fast-mode horizon 2π/λ_max fixes it. A quantum observable can fail for
 numerical reasons that look exactly like a physics result.)*
 
+**The tolerance is not a hidden knob.** The metric has one free parameter, the 2 Å
+matching window, and [`scripts/tol_sweep.py`](scripts/tol_sweep.py) varies it from 0.5 Å
+to no matching at all (43 curated targets, N ≤ 700):
+
+| method | 0.5 Å | 1 Å | 2 Å | 3 Å | 4 Å | 6 Å | unmatched |
+|---|---|---|---|---|---|---|---|
+| **`ALPS`** | 0.574 | 0.583 | **0.578** | 0.579 | 0.576 | 0.576 | 0.570 |
+| `btb_raw` | 0.523 | 0.519 | 0.525 | 0.529 | 0.530 | 0.536 | **0.574** |
+| `ctqw_only` | 0.478 | 0.481 | 0.481 | 0.486 | 0.490 | 0.498 | 0.540 |
+| `qasc_baseline` | 0.468 | 0.468 | 0.469 | 0.476 | 0.481 | 0.492 | 0.534 |
+| `qfi` | 0.456 | 0.456 | 0.460 | 0.469 | 0.475 | 0.493 | 0.553 |
+| DIAGNOSTIC `ctrl_closeness` | 0.489 | 0.489 | 0.494 | 0.503 | 0.510 | 0.523 | **0.573** |
+| CONTROL `ctrl_random` | 0.527 | 0.529 | 0.527 | 0.524 | 0.523 | 0.525 | 0.521 |
+| *median matched pairs* | *104* | *209* | *406* | *600* | *754* | *1113* | *2448* |
+
+Three things this establishes.
+
+**The window works, and 2 Å is inside the safe range.** `ctrl_closeness` is the
+diagnostic: it must sit near 0.5 while distance is controlled and climb toward its
+plain-AUC value of 0.573 as the window loosens. It does exactly that — 0.489 through
+1.5 Å, 0.494 at 2 Å, then leaking upward from 3 Å and reaching 0.523 by 6 Å. Anything up
+to about 3 Å controls the confound; beyond 4 Å the metric is quietly reverting to plain AUC.
+
+**ALPS does not depend on the choice at all.** It sits between 0.574 and 0.583 across the
+entire sweep, including at 0.5 Å where only ~104 pairs per target survive. Its result is
+not an artefact of the window.
+
+**The confounded methods reveal themselves in the sweep.** `btb_raw` climbs from 0.52 to
+0.574 as matching loosens, and the three quantum readouts climb from ~0.46 to 0.53–0.55.
+Their plain-AUC scores really were proximity, and the sweep shows it being added back in
+one step at a time.
+
 **Caveats.** This measures
 discrimination, not localisation: nothing here changes the fact that no method reaches
 DCC ≤ 4 Å on more than 1.9% of targets.
@@ -892,7 +924,7 @@ methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative
              chiral.py  qfi.py
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py  quantum_recheck.py
-             partial_auc.py  floor_and_tests.py  retune_alps.py
+             partial_auc.py  floor_and_tests.py  retune_alps.py  tol_sweep.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
