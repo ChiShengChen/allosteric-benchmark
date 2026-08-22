@@ -54,4 +54,19 @@ model.py   the message-passing network
 run.py     train, evaluate, compare
 ```
 
-Results are recorded in [`RESULTS.md`](RESULTS.md).
+## Result
+
+| | stratified AUC | GNN − ALPS | paired p |
+|---|---|---|---|
+| GNN, seed 0 | **0.622** | +0.030 | 0.136 |
+| GNN, seed 1 | **0.630** | +0.038 | 0.151 |
+| GNN + dist channel | 0.595 | +0.003 | 0.787 |
+| ALPS | 0.592 | — | — |
+
+The strongest method in this repository, decisively above the random control in both
+seeds, and **not** distinguishable from ALPS — the margin reproduces across splits but
+the paired test cannot separate them at n = 96.
+
+The ablation is the finding worth keeping: giving the model the distance channel makes
+it **worse**, 0.622 → 0.595, and collapses its margin over ALPS. Denying the confound
+did not cost anything; it helped. Full numbers in [`RESULTS.md`](RESULTS.md).

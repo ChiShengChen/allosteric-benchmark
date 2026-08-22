@@ -174,7 +174,35 @@ All in [`methods/`](methods/), same input signature, same post-processing.
 
 ---
 
-### 1.5 A larger set, and the pipeline that builds it
+### 1.5 The residue-graph GNN
+
+The literature survey ([`docs/ai-model-landscape.md`](docs/ai-model-landscape.md), 2,536
+deduplicated papers, 27 verified evidence cards) asked which AI model families can do
+this task, then which run on *this* input. Two survived: the elastic-network route ALPS
+already is, and a residue-graph GNN, which nobody in that corpus had characterised at
+residue level on an allosteric task. [`gnn/`](gnn/) tries it.
+
+| | stratified AUC | GNN − ALPS | paired p |
+|---|---|---|---|
+| GNN, seed 0 | **0.622** | +0.030 | 0.136 |
+| GNN, seed 1 | **0.630** | +0.038 | 0.151 |
+| GNN + distance channel | 0.595 | +0.003 | 0.787 |
+| ALPS | 0.592 | — | — |
+| CONTROL `ctrl_dist` | 0.509 | — | — |
+
+The strongest numbers here, decisively above the random control in both seeds, and
+**not** distinguishable from ALPS: the margin reproduces across two independent splits,
+so it is not a split artifact, but the paired test cannot separate them at n = 96.
+
+The ablation is the result worth keeping. The base model is **denied** the
+distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and
+that a learned combiner handed distance reproduces it. Giving the GNN that channel makes
+it **worse**, 0.622 → 0.595, and collapses its margin over ALPS to nothing. Denying the
+confound did not cost anything; it helped. The same behaviour §10 measured on the
+learned combiner, in a completely different model family — which makes it look like a
+property of the task rather than of one architecture.
+
+### 1.6 A larger set, and the pipeline that builds it
 
 Sample size is this benchmark's binding constraint. The literature survey in
 [`docs/ai-model-landscape.md`](docs/ai-model-landscape.md) measured the field's
@@ -1232,10 +1260,10 @@ hybrid/      features.py  kernels.py  prescreen.py  run.py  vqc.py
              README.md  RESULTS.md   <- the classical/quantum ML work stream
 gnn/         data.py  model.py  run.py  README.md  RESULTS.md
                                           <- residue-graph GNN (see 1.5)
-external/allobench-pipeline/            <- vendored dataset pipeline (see 1.5)
+external/allobench-pipeline/            <- vendored dataset pipeline (see 1.6)
 data/
   targets_curated/    97  expert-curated labels   <- the headline set (see 1.3)
-  targets_allobench/  --  built by scripts/build_allobench.sh, not shipped (see 1.5)
+  targets_allobench/  --  built by scripts/build_allobench.sh, not shipped (see 1.6)
   targets/            11  proxy labels, "allosteric"-tagged entries (tier-A)
   targets_b/          90  proxy labels, generic query (tier-B)
   targets_multimer/   88  proxy labels, whole assembly per graph

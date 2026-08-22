@@ -3,3 +3,7 @@ __pycache__/
 data/pdb_cache/
 *.log
 .venv/
+
+# derived cache: 72 MB, rebuilt by gnn/data.py in ~25 min.
+# The datasets in data/ are the artifact; this is not one.
+gnn/graphs.npz
