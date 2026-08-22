@@ -163,81 +163,127 @@ def render(rows, n_targets, mode):
     return "\n".join(o)
 
 
-def render_stratified(rows, floor, n_targets, mode):
-    """The confound-free comparison: distance-stratified AUC, one panel.
+def _fp_size_matched(cache, method, stat="top5", tol=0.25):
+    """Protein-level AUC, positives vs negatives, matched on log size."""
+    pos = [v for v in cache.values() if v["label"] == "pos" and method in v]
+    neg = [v for v in cache.values() if v["label"] == "neg" and method in v]
+    if len(pos) < 5 or len(neg) < 5:
+        return None
+    pv = np.array([v[method][stat] for v in pos], float)
+    pn = np.log(np.array([v["n"] for v in pos], float))
+    nv = np.array([v[method][stat] for v in neg], float)
+    nn = np.log(np.array([v["n"] for v in neg], float))
+    close = np.abs(pn[:, None] - nn[None, :]) <= tol
+    if close.sum() < 50:
+        return None
+    d = pv[:, None] - nv[None, :]
+    w = (d > 0).astype(float) + 0.5 * (d == 0)
+    return float(w[close].sum() / close.sum())
 
-    Plain AUC is confounded by proximity on both label sets, so this is the
-    metric the conclusions rest on. The random control is drawn as the floor
-    because it sits at 0.523 rather than 0.500 — spatial smoothing plus
-    clustered positives — and reading against 0.5 would overstate everything.
+
+def render_two_panel(resid, fp, floor, floor_sd, n_res, n_pos, n_neg, mode):
+    """The two questions, side by side, on shared rows.
+
+    Left: can a method rank the allosteric site highly *inside* a protein known to
+    have one. Right: can it tell a protein that has a site from one that does not.
+    ALPS wins the left panel and fails the right one exactly like everything else,
+    and putting them on shared rows is the only honest way to show that.
+
+    Bars run from the chance line, not from zero, so direction carries meaning.
     """
     c = THEME[mode]
-    order = sorted(rows, key=lambda m: -rows[m])
-    top, row_h = 104, 26
-    W2 = 760
-    H = top + len(order) * row_h + 56
-    lab_w, plot_w = 210, 470
-    lo, hi = 0.44, 0.60
+    order = sorted(resid, key=lambda m: -resid[m])
+    top, row_h = 150, 26
+    W2, lab_w, pw, gap = 940, 196, 300, 46
+    H = top + len(order) * row_h + 78
 
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W2}" height="{H}" '
          f'viewBox="0 0 {W2} {H}" font-family="-apple-system,BlinkMacSystemFont,'
          f'\'Segoe UI\',Helvetica,Arial,sans-serif">',
          f'<rect width="{W2}" height="{H}" fill="{c["surface"]}"/>',
          f'<text x="16" y="30" font-size="16" font-weight="600" fill="{c["ink"]}">'
-         f'What survives after conditioning on distance</text>',
-         f'<text x="16" y="50" font-size="12" fill="{c["ink2"]}">'
-         f'Distance-stratified AUC on {n_targets} curated targets: only residue pairs '
-         f'within 2 &#197; of each other</text>',
-         f'<text x="16" y="66" font-size="12" fill="{c["ink2"]}">'
-         f'in distance-to-active-site are compared, so proximity is spent and anything '
-         f'above the floor is real.</text>']
-    lg = [(c["accent"], "best classical method"), (c["muted"], "other methods"),
+         f'Two questions. One method answers the first; nothing answers the second.</text>',
+         f'<text x="16" y="51" font-size="12" fill="{c["ink2"]}">'
+         f'Curated allosteric annotations. Both panels remove the confound that '
+         f'dominates the raw numbers &#8212; proximity on the left,</text>',
+         f'<text x="16" y="67" font-size="12" fill="{c["ink2"]}">'
+         f'structure size on the right &#8212; by comparing only matched pairs. '
+         f'Bars are drawn from chance.</text>',
+         f'<text x="16" y="105" font-size="11.5" fill="{c["control"]}">'
+         f'Right panel caveat: ctrl_dist still reaches 0.752, so matching on residue '
+         f'count does not remove every difference between the two sets.</text>']
+    lg = [(c["accent"], "ALPS"), (c["muted"], "other methods"),
           (c["control"], "controls / quantum readouts")]
     x = 16
     for col, lab in lg:
-        o.append(f'<rect x="{x}" y="80" width="10" height="10" rx="2" fill="{col}"/>')
-        o.append(f'<text x="{x+15}" y="89" font-size="11.5" fill="{c["ink2"]}">{lab}</text>')
+        o.append(f'<rect x="{x}" y="82" width="10" height="10" rx="2" fill="{col}"/>')
+        o.append(f'<text x="{x+15}" y="91" font-size="11.5" fill="{c["ink2"]}">{lab}</text>')
         x += 22 + len(lab) * 6.4
-
-    def px(v):
-        return lab_w + (v - lo) / (hi - lo) * plot_w
-    y1 = top + len(order) * row_h
-    for t in (0.45, 0.50, 0.55, 0.60):
-        gx = px(t)
-        o.append(f'<line x1="{gx:.1f}" y1="{top-6}" x2="{gx:.1f}" y2="{y1}" '
-                 f'stroke="{c["grid"]}" stroke-width="1"/>')
-        o.append(f'<text x="{gx:.1f}" y="{y1+16}" font-size="10" text-anchor="middle" '
-                 f'fill="{c["ink3"]}">{t:.2f}</text>')
-    fx = px(floor)
-    o.append(f'<line x1="{fx:.1f}" y1="{top-6}" x2="{fx:.1f}" y2="{y1}" '
-             f'stroke="{c["control"]}" stroke-width="1.5" stroke-dasharray="3 3"/>')
-    o.append(f'<text x="{fx+5:.1f}" y="{top-10}" font-size="10.5" '
-             f'fill="{c["control"]}">random floor {floor:.3f}</text>')
 
     QUANT = {"qfi", "ctqw_only", "qasc_baseline"}
     CTRL = {"ctrl_random", "ctrl_dist", "ctrl_burial", "ctrl_closeness"}
+    y1 = top + len(order) * row_h
+    panels = [(lab_w, resid, floor, "within a protein that has a site",
+               f"residue ranking, {n_res} targets", (0.44, 0.62)),
+              (lab_w + pw + gap, fp, 0.5, "does this protein have a site at all?",
+               f"protein level, {n_pos} vs {n_neg}, size-matched", (0.35, 0.72))]
+
+    for px, data, chance, title, sub, (lo, hi) in panels:
+        o.append(f'<text x="{px}" y="{top-30}" font-size="12.5" font-weight="600" '
+                 f'fill="{c["ink"]}">{esc(title)}</text>')
+        o.append(f'<text x="{px}" y="{top-14}" font-size="11" fill="{c["ink3"]}">'
+                 f'{esc(sub)}</text>')
+
+        def X(v):
+            return px + (min(max(v, lo), hi) - lo) / (hi - lo) * pw
+        for t in np.linspace(lo, hi, 4):
+            o.append(f'<line x1="{X(t):.1f}" y1="{top-6}" x2="{X(t):.1f}" y2="{y1}" '
+                     f'stroke="{c["grid"]}" stroke-width="1"/>')
+            o.append(f'<text x="{X(t):.1f}" y="{y1+16}" font-size="10" '
+                     f'text-anchor="middle" fill="{c["ink3"]}">{t:.2f}</text>')
+        if floor_sd and chance != 0.5:
+            o.append(f'<rect x="{X(chance-floor_sd):.1f}" y="{top-6}" '
+                     f'width="{X(chance+floor_sd)-X(chance-floor_sd):.1f}" '
+                     f'height="{y1-top+6}" fill="{c["control"]}" opacity="0.13"/>')
+        o.append(f'<line x1="{X(chance):.1f}" y1="{top-6}" x2="{X(chance):.1f}" '
+                 f'y2="{y1}" stroke="{c["control"]}" stroke-width="1.5" '
+                 f'stroke-dasharray="3 3"/>')
+        lbl = (f"floor {chance:.3f} \u00b1 {floor_sd:.3f}" if chance != 0.5
+               else "chance 0.50")
+        o.append(f'<text x="{X(chance):.1f}" y="{y1+32}" font-size="10.5" '
+                 f'text-anchor="middle" fill="{c["control"]}">{lbl}</text>')
+
+        for ri, m in enumerate(order):
+            v = data.get(m)
+            y = top + ri * row_h + 6
+            if v is None:
+                o.append(f'<text x="{X(chance):.1f}" y="{y+10}" font-size="10.5" '
+                         f'text-anchor="middle" fill="{c["ink3"]}">not run</text>')
+                continue
+            col = (c["accent"] if m.startswith("ALPS")
+                   else c["control"] if (m in CTRL or m in QUANT) else c["muted"])
+            x0, x1 = X(min(v, chance)), X(max(v, chance))
+            o.append(f'<rect x="{x0:.1f}" y="{y}" width="{max(1.5, x1-x0):.1f}" '
+                     f'height="12" rx="4" fill="{col}"/>')
+            tx = X(v) + (6 if v >= chance else -6)
+            anc = "start" if v >= chance else "end"
+            for stroke, fill in ((c["surface"], "none"), ("none", c["ink3"])):
+                o.append(f'<text x="{tx:.1f}" y="{y+10}" font-size="10.5" '
+                         f'text-anchor="{anc}" fill="{fill}" stroke="{stroke}" '
+                         f'stroke-width="2.5" stroke-linejoin="round">{v:.3f}</text>')
+
     for ri, m in enumerate(order):
-        v = rows[m]
-        y = top + ri * row_h + 6
-        col = (c["accent"] if m in ("ALPS", "ALPS_noresid")
-               else c["control"] if (m in CTRL or m in QUANT) else c["muted"])
-        x0, x1 = px(min(v, floor)), px(max(v, floor))
-        o.append(f'<rect x="{x0:.1f}" y="{y}" width="{max(1.5, x1-x0):.1f}" height="12" '
-                 f'rx="4" fill="{col}"/>')
+        y = top + ri * row_h + 16
         note = " (quantum)" if m in QUANT else (" (control)" if m in CTRL else "")
-        o.append(f'<text x="{lab_w-10}" y="{y+10}" font-size="11.5" text-anchor="end" '
-                 f'fill="{c["ink"] if m in ("ALPS","ALPS_noresid") else c["ink2"]}" '
+        o.append(f'<text x="{lab_w-12}" y="{y}" font-size="11.5" text-anchor="end" '
+                 f'fill="{c["ink"] if m.startswith("ALPS") else c["ink2"]}" '
                  f'font-family="ui-monospace,SFMono-Regular,Menlo,monospace">'
                  f'{esc(m)}{note}</text>')
-        tx = px(v) + (6 if v >= floor else -6)
-        anc = "start" if v >= floor else "end"
-        for stroke, fill in ((c["surface"], "none"), ("none", c["ink3"])):
-            o.append(f'<text x="{tx:.1f}" y="{y+10}" font-size="10.5" '
-                     f'text-anchor="{anc}" fill="{fill}" stroke="{stroke}" '
-                     f'stroke-width="2.5" stroke-linejoin="round">{v:.3f}</text>')
+
     o.append(f'<text x="16" y="{H-14}" font-size="10.5" fill="{c["ink3"]}">'
-             f'Curated ASBench/ASD annotations. Only ALPS clears the floor; every quantum '
-             f'readout is at or below it.</text>')
+             f'Left: only ALPS clears the floor (p = 0.0030, survives Bonferroni). '
+             f'Right: no method beats 0.57, and a distance-only control reaches 0.752 '
+             f'&#8212; the negative set still differs geometrically.</text>')
     o.append("</svg>")
     return "\n".join(o)
 
@@ -254,18 +300,31 @@ def main():
         open(p, "w").write(render(rows, n, mode))
         print(f"wrote {p}  ({len(rows)} methods, {n} targets)")
 
-    sp = os.path.join(HERE, "data", "results_partial_auc.json")
-    if os.path.exists(sp):
-        R = json.load(open(sp))
-        sr = {}
-        for m in sorted({k for r in R for k in r["rows"]}):
-            v = [r["rows"][m][0] for r in R if m in r["rows"] and r["rows"][m][0] is not None]
-            sr[m] = float(np.nanmean(np.asarray(v, float)))
-        floor = sr.get("ctrl_random", 0.5)
+    ep = os.path.join(HERE, "data", "results_expanded.json")
+    fpp = os.path.join(HERE, "data", "results_false_positive.json")
+    if os.path.exists(ep) and os.path.exists(fpp):
+        E = {k: v for k, v in json.load(open(ep)).items() if k != "_params"}
+        resid = {}
+        for m in sorted({k for v in E.values() for k in v if k != "n"}):
+            vals = [v[m] for v in E.values() if v.get(m) is not None]
+            if vals:
+                resid[m] = float(np.mean(vals))
+        cache = json.load(open(fpp))
+        alias = {"ALPS": "ALPS_raw", "ALPS_noresid": "ALPS_raw"}
+        # ctrl_random anchors the right panel; without it there is no reference
+        fp = {}
+        for m in resid:
+            got = _fp_size_matched(cache, alias.get(m, m))
+            if got is not None:
+                fp[m] = got
+        npos = sum(1 for v in cache.values() if v["label"] == "pos")
+        nneg = sum(1 for v in cache.values() if v["label"] == "neg")
+        resid.pop("ALPS_noresid", None)          # identical to ALPS, one row is enough
         for mode in ("light", "dark"):
             p = os.path.join(a.out, f"stratified-{mode}.svg")
-            open(p, "w").write(render_stratified(sr, floor, len(R), mode))
-            print(f"wrote {p}  ({len(sr)} methods, {len(R)} targets)")
+            open(p, "w").write(render_two_panel(resid, fp, 0.4963, 0.0157,
+                                                len(E), npos, nneg, mode))
+            print(f"wrote {p}  ({len(resid)} methods, {len(E)} targets)")
 
 
 if __name__ == "__main__":

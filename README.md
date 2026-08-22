@@ -923,16 +923,28 @@ sets at **AUC 0.783**, and no method beat that. Matching positives to negatives 
 0.25 in log N spends the size information, the same way the residue-level metric spends
 proximity. 1139 matched pairs, 55 positives against 90 negatives:
 
-| statistic | `ALPS_raw` | `ctqw_only` | `qasc_baseline` | `corrsite` | CONTROL `ctrl_burial` |
-|---|---|---|---|---|---|
-| highest score | 0.537 | 0.528 | 0.532 | 0.494 | 0.392 |
-| mean of top 5 | **0.566** | 0.500 | 0.502 | 0.495 | 0.400 |
-| peakiness | 0.404 | 0.519 | 0.262 | 0.498 | 0.413 |
-| kurtosis | 0.399 | 0.536 | 0.357 | 0.513 | 0.438 |
+| statistic | `ALPS_raw` | `ctqw_only` | `qasc_baseline` | `corrsite` | CONTROL `ctrl_burial` | CONTROL `ctrl_random` | CONTROL `ctrl_dist` |
+|---|---|---|---|---|---|---|---|
+| highest score | 0.537 | 0.528 | 0.532 | 0.494 | 0.392 | 0.499 | — |
+| mean of top 5 | **0.566** | 0.500 | 0.502 | 0.495 | 0.400 | 0.499 | **0.752** |
+| peakiness | 0.404 | 0.519 | 0.262 | 0.498 | 0.413 | — | — |
+| kurtosis | 0.399 | 0.536 | 0.357 | 0.513 | 0.438 | — | — |
 
-**Nothing exceeds 0.57.** The best cell is ALPS's top-5 mean at 0.566, and the whole table
-lives in the 0.39–0.57 band. **No method here — including the one that survives every
-residue-level check — can tell whether a protein has an allosteric site at all.**
+**No method exceeds 0.57.** The best cell is ALPS's top-5 mean at 0.566, and every method
+sits in the 0.39–0.57 band. On this evidence, none of them — including the one that
+survives every residue-level check — can tell whether a protein has an allosteric site.
+
+**But the control says the experiment is still confounded.** Adding `ctrl_dist` to the
+size-matched comparison gives **0.752** — a statistic that uses nothing but distance to the
+active site separates the two classes far better than any method does. Matching on residue
+count evidently does not remove every systematic difference between the sets; the negatives
+differ in spatial extent as well as in residue number.
+
+So the defensible claim is the narrower one: **no method here beats a trivial geometric
+control at protein-level discrimination**, and whether any of them could do so on a
+properly matched negative set is not yet established. Matching on radius of gyration as
+well as residue count is the obvious next step, and until it is done this section reports a
+failure to demonstrate the ability rather than a demonstration of its absence.
 
 ### What this does and does not overturn
 
