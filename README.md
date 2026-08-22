@@ -786,7 +786,53 @@ retuned values (+0.066, p = 0.026, against +0.055, p = 0.030 before), and the di
 z-score is still neutral — `ALPS` and `ALPS_noresid` are identical to three decimals at
 0.588.
 
-### 9.6 What still holds
+### 9.6 The expanded set: the first claim that survives correction
+
+The curated set grew from 73 to **97 targets** after two fixes to the builder
+([`scripts/build_dataset_curated.py`](scripts/build_dataset_curated.py)): the size cap
+excluded 38 rows at 1400 residues and is now 2200, and — a silent data loss worth naming
+— five table rows are *per site* (`1CE8_1`, `1CE8_2` are two distinct allosteric sites on
+one structure) but output files were keyed on the PDB id alone, so the second of each
+pair was overwritten and skipped as "already built". Files are now keyed on the full row
+tag. The median target grew from N = 579 to 806.
+
+That last part was expected to hurt: section 9.5 showed the re-tuned radius does not
+transfer above N ≈ 520, and the new targets are mostly larger. It did not.
+
+Re-run on 96 evaluable targets ([`scripts/eval_expanded.py`](scripts/eval_expanded.py)):
+
+| method | stratified AUC | vs floor 0.496 | paired p | n |
+|---|---|---|---|---|
+| **`ALPS_noresid`** | **0.591** | **+0.094** | **0.0032** | 96 |
+| **`ALPS`** | **0.591** | **+0.094** | **0.0030** | 96 |
+| `apop` | 0.533 | +0.036 | 0.60 | 54 |
+| CONTROL `ctrl_dist` | 0.528 | +0.031 | 0.20 | 96 |
+| `ctqw_only` | 0.519 | +0.023 | 0.94 | 96 |
+| CONTROL `ctrl_random` | 0.519 | +0.022 | reference | 96 |
+| `corrsite` | 0.511 | +0.015 | 0.80 | 96 |
+| `qasc_baseline` | 0.506 | +0.010 | 0.67 | 96 |
+| `btb_raw` | 0.504 | +0.008 | 0.45 | 96 |
+| CONTROL `ctrl_burial` | 0.498 | +0.001 | 0.51 | 96 |
+| CONTROL `ctrl_closeness` | 0.473 | −0.024 | **0.0026** | 96 |
+| `qfi` | 0.465 | −0.031 | **0.037** | 44 |
+
+**ALPS now survives multiple-comparison correction.** At p = 0.0030 against a Bonferroni
+threshold of 0.05/11 = 0.0045, it clears the bar that every earlier version of this claim
+failed. Its margin over the floor also grew rather than shrank, +0.082 at n = 72 to
++0.094 at n = 96. This is the only claim in this repository that has survived a larger
+sample, curated labels, a confound-free metric, a tolerance sweep, and a correction for
+the number of comparisons made.
+
+**And it is not a small-structure effect.** Split by size, the margin is stable across the
+whole range — +0.090 at N ≤ 520, +0.063 for 521–900, +0.067 above 900. The re-tuned
+*parameters* do not transfer above N ≈ 520 (section 9.5), but the *method* does. Those are
+different claims and the earlier finding did not license the stronger one.
+
+Everything else is unchanged in substance: no other method is distinguishable from the
+random control, the quantum readouts sit at 0.506–0.519 against a 0.519 floor, and `qfi`
+remains significantly *below* it.
+
+### 9.7 What still holds
 
 - **Every method beats the random control on significance** (23–60% against 11.0%), so the
   task carries signal and the protocol detects it.
@@ -796,7 +842,7 @@ z-score is still neutral — `ALPS` and `ALPS_noresid` are identical to three de
 - **Nothing localises.** Best DCC ≤ 4 Å is 1.9%. Enrichment and pointing at the right
   place remain different problems, and only the first is solved.
 
-### 9.7 Every quantum insertion point, re-tested on the correct metric
+### 9.8 Every quantum insertion point, re-tested on the correct metric
 
 Three quantum readouts had been re-scored on curated labels with the confound
 removed; six had not, and rested on proxy labels and plain AUC.
@@ -836,11 +882,11 @@ moves results as much as method choice. It does not change the conclusion, becau
 quantum readout is above the floor in *either* subset, but it is why none of these numbers
 should be quoted to three decimals.
 
-### 9.8 What this does to the quantum conclusions
+### 9.9 What this does to the quantum conclusions
 
 The nine per-residue insertion points were originally measured on **proxy labels**, and
 section 9.1 shows plain-AUC rankings do not transfer between label sets. Sections 9.4 and
-9.7 re-test **all nine** on curated labels with the proximity confound removed. None is
+9.8 re-test **all nine** on curated labels with the proximity confound removed. None is
 distinguishable from a random control in the favourable direction; the only nominally
 significant movement is a readout sitting *below* it. **The quantum negative therefore
 stands and no longer rests on the proxy construction that manufactured it.** Two
@@ -925,12 +971,13 @@ methods/     common.py  quantum.py  btb.py  enm.py  qpr.py  alps.py  cooperative
 scripts/     build_dataset.py  build_dataset_b.py  evaluate.py  learned_combiner.py
              ablate_readouts.py  cooperative.py  diversify.py  quantum_recheck.py
              partial_auc.py  floor_and_tests.py  retune_alps.py  tol_sweep.py
+             eval_expanded.py
              build_dataset_multimer.py  multimer_ablation.py  make_figure.py
 data/
   targets/       tier-A  (11 npz: cb, anchor, y, resnums)
   targets_b/     tier-B  (90 npz, all evaluated)
   targets_multimer/  oligomer set (88 npz, whole assembly per graph)
-  targets_curated/   73 npz with EXPERT-CURATED allosteric + active site residues
+  targets_curated/   97 npz with EXPERT-CURATED allosteric + active site residues
   allo_tableS2.csv   the curated annotation table they are built from
   qasc_targets/  the three targets shipped with QASC
   manifest*.json results_*.json
