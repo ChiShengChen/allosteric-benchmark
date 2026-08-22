@@ -12,6 +12,9 @@ lives outside the vendored tree so that copy stays diffable against upstream.
     allo_labels (N,)        ->      y       (N,)
     resnums (N,)            ->      resnums (N,)
     meta JSON               ->      chain_id (N,), uniprot, pdb, modulator
+                                       (the PDB id is under meta["name"], not
+                                        meta["pdb"] -- caught by spot-checking real
+                                        samples, invisible to the synthetic selftest)
     manifest folds          ->      fold    scalar     UniProt-grouped, carried over
 
 **The coordinates are C-alpha, ours are C-beta.** They go into the `cb` slot because
@@ -91,7 +94,7 @@ def convert(path, fold=None):
                coord_type=np.asarray("CA"),
                label_rule=np.asarray("4A heavy-atom to allosteric modulator"),
                uniprot=np.asarray(str(meta.get("uniprot", ""))),
-               pdb=np.asarray(str(meta.get("pdb", ""))),
+               pdb=np.asarray(str(meta.get("name", meta.get("pdb", "")))),
                modulator=np.asarray(str(meta.get("modulator", ""))))
     if fold is not None:
         rec["fold"] = np.asarray(int(fold))
@@ -99,12 +102,28 @@ def convert(path, fold=None):
 
 
 def load_folds():
-    """UniProt-grouped fold assignment from the vendored manifest, keyed by sample."""
-    p = os.path.join(VENDOR, "metadata", "manifest.json")
-    if not os.path.exists(p):
-        return {}
-    man = json.load(open(p))
-    return {k: int(f) for f, keys in man.get("folds", {}).items() for k in keys}
+    """UniProt-grouped fold assignment, keyed by sample, with a UniProt fallback.
+
+    Prefers the manifest our own build wrote; falls back to the one upstream ships.
+    A local rebuild reproduced upstream's key set exactly (1439 of 1440 keys shared),
+    but the one extra key had no fold and would have become a silent hole in the
+    cross-validation. Since folds are grouped *by UniProt*, an unlisted sample can be
+    placed by looking up any sibling sharing its accession -- which keeps the grouping
+    property intact rather than inventing a split.
+    """
+    fold, uni = {}, {}
+    for name in ("manifest.built.json", "manifest.json"):
+        p = os.path.join(VENDOR, "metadata", name)
+        if not os.path.exists(p):
+            continue
+        man = json.load(open(p))
+        for f, keys in man.get("folds", {}).items():
+            for k in keys:
+                fold.setdefault(k, int(f))
+        for row in man.get("manifest", []):
+            if row.get("key") in fold and row.get("uniprot"):
+                uni.setdefault(row["uniprot"], fold[row["key"]])
+    return fold, uni
 
 
 def selftest():
@@ -169,11 +188,23 @@ def main():
         return 1
 
     os.makedirs(a.out, exist_ok=True)
-    folds = load_folds()
-    kept, reasons = 0, {}
+    folds, by_uniprot = load_folds()
+    kept, reasons, rescued, unplaced = 0, {}, 0, 0
     for f in sorted(glob.glob(os.path.join(a.src, "*.npz"))):
         key = os.path.basename(f)[:-4]
-        rec, why = convert(f, folds.get(key))
+        fold = folds.get(key)
+        if fold is None:                      # not in any manifest: place by UniProt
+            z = np.load(f, allow_pickle=True)
+            try:
+                u = json.loads(str(z["meta"])).get("uniprot")
+            except Exception:
+                u = None
+            fold = by_uniprot.get(u)
+            if fold is None:
+                unplaced += 1
+            else:
+                rescued += 1
+        rec, why = convert(f, fold)
         if rec is None:
             reasons[why] = reasons.get(why, 0) + 1
             continue
@@ -181,6 +212,9 @@ def main():
         kept += 1
 
     print(f"converted {kept} samples -> {a.out}")
+    if rescued or unplaced:
+        print(f"folds: {rescued} placed by UniProt sibling, "
+              f"{unplaced} could not be placed at all")
     if reasons:
         print("dropped:")
         for why, n in sorted(reasons.items(), key=lambda kv: -kv[1]):

@@ -40,6 +40,13 @@ MSG
 fi
 export ALLOBENCH_CSV
 
+python3 -c "import prody" 2>/dev/null || {
+  echo "!! ProDy is missing. Upstream needs it in stage 3 but declares it nowhere," >&2
+  echo "   and it fails only AFTER the ~2 GB download. Install it first:" >&2
+  echo "       pip install prody" >&2
+  exit 1
+}
+
 echo "==> 1/5  filter AlloBench rows into an entry list"
 python3 "$VENDOR/pipeline/filter_allobench.py"
 

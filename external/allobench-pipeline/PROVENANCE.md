@@ -34,6 +34,22 @@ Running it needs `AlloBench.csv`, obtained separately under its own terms, plus 
 PDB download (~2 GB). So "standalone" here means *no dependency on the upstream
 repository*, not *no external data*. That distinction cannot be engineered away.
 
+## One thing upstream does not declare
+
+`pipeline/build_dataset_v2.py` imports **ProDy** at line 65, inside `main()` rather
+than at module scope, and the upstream repository ships no requirements file. So the
+build stage fails at run time on a clean environment with `ModuleNotFoundError: No
+module named 'prody'`, after the ~2 GB download has already been paid for.
+
+    pip install prody        # verified with prody 2.4.1
+
+Found by checking the import before the download finished rather than after. Recorded
+here instead of patched into the vendored copy, which stays byte-identical to upstream.
+
+The full dependency set for the vendored stage is therefore `numpy` + `prody`; the rest
+of this repository needs only `numpy` + `scipy`, and the GNN work additionally needs
+`torch` and `scikit-learn`.
+
 ## Why it was brought in
 
 Sample size is this benchmark's binding constraint. Our curated set is 97 targets;

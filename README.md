@@ -210,11 +210,28 @@ standard training sets at 90–235 proteins, and our curated set is 97. To lift 
 ceiling, the **AlloBench dataset pipeline** by
 [leo07010](https://github.com/leo07010/allosteric-dataset-pipeline) is vendored whole
 into [`external/allobench-pipeline/`](external/allobench-pipeline/) (MIT, commit
-`4082cb1`) rather than referenced, so this repository runs standalone. It builds
-**1,439 samples over 327 unique UniProt accessions and 1,367 PDB structures**, with
-UniProt-grouped 5-fold splits and an active-site annotation present in every sample —
-which is what our seeded formulation ("given the active site, find the allosteric
-site") requires.
+`4082cb1`) rather than referenced, so this repository runs standalone. Upstream's pipeline builds
+1,440 samples over 327 UniProt accessions, and a local rebuild reproduced their key
+set exactly — 1,439 of 1,440 keys shared. **What survives our own requirements is
+1,042 samples over 265 UniProt accessions**, and that smaller number is the one to
+quote:
+
+| | curated | AlloBench route |
+|---|---|---|
+| targets | 96 | **1,042** |
+| unique UniProt | ≤ 96 | **265** |
+| residues in the scored pool | 78,509 | 369,988 |
+| **evaluable positives** | 1,050 | **9,738** |
+
+Two filters account for the gap, and neither is a defect upstream: **250** samples
+have an active site of fewer than three residues, and our seeded formulation needs a
+seed; **148** have no positive surviving the 8 Å distal mask, which our metric does not
+score inside. A further **26% of raw positives** (13,204 → 9,738) fall inside that
+mask — AlloBench's 4 Å-to-modulator labels sit closer to the active site than our
+expert-curated ones do. A difference in labelling philosophy rather than an error, but
+it means the ~9× gain in evaluable positives is smaller than the ~11× gain in targets
+suggests. The active-site annotation our seeded formulation requires is present in
+every sample, and the 5-fold split is grouped by UniProt.
 
 ```bash
 ALLOBENCH_CSV=/path/to/AlloBench.csv bash scripts/build_allobench.sh
@@ -230,7 +247,7 @@ machinery, not the dataset. See
 Three differences from our curated set are load-bearing and are **not** smoothed over
 by the converter:
 
-| | curated (97) | AlloBench route (1,439) |
+| | curated (96) | AlloBench route (1,042) |
 |---|---|---|
 | coordinates | **Cβ** | **Cα** — `methods/alps.py` has `RADIUS = 12.0` tuned on Cβ contact geometry, so anything applied here must be re-tuned, holding out identity *and* size (§10.5) |
 | labels | expert annotation | **4 Å heavy-atom to the modulator** — §10 records three published conclusions that reversed when label construction changed, so the two sets are **evaluated separately, never pooled** |
