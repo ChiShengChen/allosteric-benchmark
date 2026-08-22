@@ -38,6 +38,10 @@ from model import MPNN                                          # noqa: E402
 from partial_auc import stratified_auc                           # noqa: E402
 from scipy import stats                                          # noqa: E402
 
+# The curated-set floor, from 25 seeds. NOT a constant of nature: it is a property of
+# the target set and the metric, so --floor must be passed when the data changes.
+# gnn/floor_allobench.py measures 0.5020 +/- 0.0046 on the AlloBench route, where the
+# floor's own sampling error is 3.4x tighter simply because there are 10x more targets.
 FLOOR = 0.4963
 torch.set_num_threads(8)
 
@@ -114,12 +118,29 @@ def main():
                     help="ablation: hand the model the distance channel it is "
                          "otherwise made to discover")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--floor", type=float, default=FLOOR,
+                    help="noise floor for the 'vs floor' column; re-estimate it "
+                         "whenever the target set changes (gnn/floor_allobench.py)")
     a = ap.parse_args()
 
     data = list(np.load(a.cache, allow_pickle=True)["data"])
     n = len(data)
     rng = np.random.default_rng(a.seed)
-    fold = rng.permutation(n) % a.folds
+
+    # Prefer folds carried in the data over folds invented here. The AlloBench route
+    # ships a split grouped by UniProt accession, which is strictly stronger than the
+    # protein-level grouping this script would otherwise do: it keeps homologues of the
+    # same protein out of opposite sides of the split, not merely the same structure.
+    # Re-splitting would throw that away silently, which is the whole reason the
+    # converter carries the field.
+    if all("fold" in r for r in data):
+        fold = np.array([int(r["fold"]) for r in data])
+        a.folds = len(np.unique(fold))
+        grouping = f"UniProt-grouped ({a.folds} folds, carried from the dataset)"
+    else:
+        fold = rng.permutation(n) % a.folds
+        grouping = f"protein-grouped ({a.folds} folds, assigned here)"
+    print(f"split: {grouping}", flush=True)
 
     per = {k: {} for k in ("GNN", "alps", "ctrl_dist", "ctrl_random")}
     for k in range(a.folds):
@@ -143,9 +164,11 @@ def main():
                 per[name][r["t"]] = auc
 
     tag = "GNN + dist channel" if a.with_dist else "GNN (anchor indicator only)"
-    print(f"\n=== {n} curated targets, protein-grouped {a.folds}-fold, "
+    print(f"\n=== {n} targets, {grouping}, "
           f"distance-stratified AUC ===")
     print(f"    model: hidden {a.hidden}, {a.layers} layers   [{tag}]")
+    print(f"    floor: {a.floor:.4f}" + ("  <-- curated-set default; re-estimate if "
+          "this is not the curated set" if a.floor == FLOOR else "  (passed in)"))
     print(f"{'method':14s} {'strat AUC':>10s} {'vs floor':>9s} {'p vs random':>12s}")
     ref = per["ctrl_random"]
     order = sorted(per, key=lambda z: -np.nanmean(
@@ -157,7 +180,7 @@ def main():
         ok = ~np.isnan(v) & ~np.isnan(r_)
         ps = ("reference" if name == "ctrl_random"
               else f"{stats.wilcoxon(v[ok], r_[ok]).pvalue:.4f}")
-        print(f"{name:14s} {np.nanmean(v):10.3f} {np.nanmean(v)-FLOOR:+9.3f} {ps:>12s}")
+        print(f"{name:14s} {np.nanmean(v):10.3f} {np.nanmean(v)-a.floor:+9.3f} {ps:>12s}")
 
     keys = sorted(set(per["GNN"]) & set(per["alps"]))
     g = np.array([per["GNN"][t] for t in keys], float)
