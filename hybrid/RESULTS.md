@@ -74,8 +74,9 @@ constraint (bandwidth ≲ 0.1) and a target to beat (tuned RBF at γ = 25, not t
 default that a naive comparison would have used).
 
 Gate 3 is next: quantum kernel SVM and a shallow variational classifier against tuned
-linear / RBF / polynomial SVMs **on identical features**, protein-grouped CV, stratified
-metric, controls and paired tests.
+linear / RBF / polynomial SVMs and logistic regression **on identical features**,
+protein-grouped CV, stratified metric, controls and paired tests. Both were run — the
+kernel below, the circuit in gate 3b.
 
 ## Gate 3 — quantum kernel against tuned classical kernels, identical features
 
@@ -121,13 +122,49 @@ pooled plain AUC (0.563) and is among the worst here (0.557 against 0.600 for po
 Plain AUC on pooled residues and stratified AUC under protein-grouped CV disagree about
 which classical kernel is best — one more instance of the metric deciding the ranking.
 
+## Gate 3b — the shallow variational classifier
+
+Same folds, same features, same metric. Depth set by the generalisation bound rather
+than by taste: error scales as √(T/N) in trainable gates and 44 grouped proteins afford
+tens, so the circuit is 8 qubits and 3 layers — **24 trainable parameters**. Data
+re-uploading (encode `RY(πx)`, then a trainable `RY` layer and a `CZ` ring), read out as
+the mean single-qubit ⟨Z⟩ through a trainable scale and bias against a logistic loss.
+Exact statevector simulation, verified to preserve norm to 6.7e-16 and to reproduce
+`cos(πx + θ)` on one qubit to machine precision.
+
+The classical opponent is logistic regression on identical features — the fair one, since
+both are parametric models trained by gradient descent on the same loss and differ only
+in the feature map.
+
+| model | stratified AUC | vs floor | p vs random |
+|---|---|---|---|
+| **logistic regression** | **0.596** | +0.100 | 0.0026 |
+| VQC, 24 parameters | 0.575 | +0.079 | 0.0026 |
+| CONTROL `ctrl_random` | 0.484 | −0.012 | reference |
+
+**VQC minus logistic: −0.021, paired p = 0.39.**
+
+Same shape as the kernel result: the quantum model clears the random control comfortably,
+lands slightly below its classical counterpart, and the paired test cannot separate them.
+Worth stating plainly — **the VQC's 0.575 is indistinguishable from unlearned ALPS at
+0.576** (gate 0). Twenty-four trained parameters and a quantum feature map bought nothing
+over a single hand-designed score with no training at all.
+
 ### Verdict on the work stream
 
 **No quantum advantage on this task, this feature set, and this sample size** — and the
-result is a tie rather than a collapse, which is the more informative outcome. It matches
-the prior the folder was opened with, but now on our own data, with the classical side
-tuned, at the only bandwidth where the quantum kernel is functional, and with the ranking
-showing the mechanism the literature named.
+result is a tie rather than a collapse, which is the more informative outcome. Both
+quantum models land just below their classical counterpart and neither gap is significant:
+
+| | quantum | classical | Δ | paired p |
+|---|---|---|---|---|
+| kernel | 0.592 (`bw=0.02`) | 0.600 (`poly-4`) | −0.008 | 0.20 |
+| parametric model | 0.575 (VQC, 24 params) | 0.596 (logistic) | −0.021 | 0.39 |
+
+It matches the prior the folder was opened with, but now on our own data, with the
+classical side tuned, at the only bandwidth where the quantum kernel is functional, with
+both quantum model families run rather than one, and with the ranking showing the
+mechanism the literature named.
 
 What would change the answer: features carrying structure a polynomial kernel cannot
 reach, or a sample large enough for the quantum kernel's extra capacity to pay for itself.

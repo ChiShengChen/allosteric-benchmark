@@ -65,6 +65,7 @@ features.py    build the per-residue feature matrix on the curated targets
 prescreen.py   gates 0-2: does learning help, geometric difference, non-linearity
 kernels.py     classical kernels and simulated quantum feature-map kernels
 run.py         gate 3, only if the prescreen leaves headroom
+vqc.py         gate 3b, the shallow variational classifier
 ```
 
 Status is recorded in [`RESULTS.md`](RESULTS.md) as gates are passed or fail.
@@ -75,15 +76,17 @@ Gates 0–2 left the door open and produced the constraint that made gate 3 mean
 bandwidth ≲ 0.1, and a *tuned* classical target rather than the untuned default. Gate 3
 then put both sides on identical features and the same training subsample:
 
-| | stratified AUC |
-|---|---|
-| best classical (`poly-4`) | **0.600** |
-| best quantum (`bw = 0.02`) | 0.592 |
-| control `ctrl_random` | 0.486 |
+| | quantum | classical | Δ | paired p |
+|---|---|---|---|---|
+| kernel | 0.592 (`bw = 0.02`) | **0.600** (`poly-4`) | −0.008 | 0.20 |
+| parametric model | 0.575 (VQC, 24 params) | 0.596 (logistic) | −0.021 | 0.39 |
+| control `ctrl_random` | 0.485 | | | |
 
-Difference −0.008, paired p = 0.20. Both clear the random control; neither separates from
-the other. And the ranking shows the mechanism the literature named — the best classical
-kernel is the degree-4 polynomial that a bandwidth-tuned quantum kernel is known to
-collapse onto.
+Both quantum models clear the random control and both land just below their classical
+counterpart, with neither gap significant. Two details make this more than a bare tie: the
+best classical kernel is the degree-4 polynomial that a bandwidth-tuned quantum kernel is
+known to collapse onto — the mechanism the literature named, visible in the ranking — and
+the VQC's 0.575 is indistinguishable from **unlearned** ALPS at 0.576, so 24 trained
+parameters bought nothing over one hand-designed score.
 
 Full numbers and the three prescreen repairs are in [`RESULTS.md`](RESULTS.md).
