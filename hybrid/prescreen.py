@@ -55,7 +55,6 @@ def gate0(data, feats):
         mdl = LogisticRegression(max_iter=2000).fit(Xtr, ytr)
         for i in te:
             d = data[i]
-            A = contact_graph(d["Xcb"], 10.0) if "Xcb" in d else None
             p = np.zeros(len(d["y"]))
             p[d["pool"]] = mdl.predict_proba(d["X"][d["pool"]])[:, 1]
             for name, v in (("logistic", p),
@@ -64,6 +63,8 @@ def gate0(data, feats):
                 auc, _ = stratified_auc(d["y"], v, d["pool"], d["dist"], 2.0)
                 out[name].append(auc)
     print("GATE 0 — does learning help, on labels we trust?")
+    print("  (no pocket smoothing here, so these are not directly comparable to")
+    print("   README section 10.6; the learner-vs-ALPS contrast within the gate is)")
     ref = np.array(out["ctrl_random"], float)
     for name in ("logistic", "ALPS alone", "ctrl_random"):
         v = np.array(out[name], float)
@@ -81,48 +82,99 @@ def gate0(data, feats):
 
 
 def gate1(X, y, n_sub=400, seed=0):
-    """Geometric difference between quantum and classical Gram matrices."""
+    """Geometric difference, swept over bandwidth, with the identity diagnostic.
+
+    The criterion is one-directional: g well below sqrt(n) *proves* the classical
+    model matches or beats the quantum one. A large g proves nothing in the other
+    direction -- and an untuned quantum kernel is large-g precisely because it
+    approaches the identity, which is the documented failure mode, not headroom.
+    So the off-diagonal mass is reported next to g: a kernel whose off-diagonals
+    have collapsed cannot generalise no matter what g says.
+    """
     rng = np.random.default_rng(seed)
     idx = rng.choice(len(X), size=min(n_sub, len(X)), replace=False)
     Xs = X[idx]
-    Kc = rbf_kernel(Xs, Xs, gamma=1.0 / Xs.shape[1])
-    Kq = quantum_kernel(Xs, Xs)
-    # g = sqrt( || sqrt(Kq) Kc^-1 sqrt(Kq) ||_inf ) on normalised kernels
+    m = len(Xs)
+
     def norm(K):
         d = np.sqrt(np.clip(np.diag(K), 1e-12, None))
         return K / np.outer(d, d)
-    Kc, Kq = norm(Kc), norm(Kq)
-    m = len(Xs)
+
+    Kc = norm(rbf_kernel(Xs, Xs, gamma=1.0 / Xs.shape[1]))
     Kc_inv = np.linalg.pinv(Kc + 1e-6 * np.eye(m))
-    w, V = np.linalg.eigh(Kq)
-    sq = (V * np.sqrt(np.clip(w, 0, None))) @ V.T
-    M = sq @ Kc_inv @ sq
-    g = float(np.sqrt(np.abs(np.linalg.eigvalsh(M)).max()))
-    print("\nGATE 1 — geometric difference")
-    print(f"  n = {m}   g = {g:.2f}   sqrt(n) = {np.sqrt(m):.2f}")
-    print("  " + ("g >= sqrt(n): quantum kernel has headroom on this feature set"
-                  if g >= np.sqrt(m) else
-                  "g << sqrt(n): the classical model is GUARANTEED to match or beat it"))
-    return g, float(np.sqrt(m))
+    off = ~np.eye(m, dtype=bool)
+
+    print("\nGATE 1 — geometric difference vs bandwidth")
+    print(f"  n = {m}, sqrt(n) = {np.sqrt(m):.1f}")
+    print(f"  {'bandwidth':>10s} {'g':>10s} {'mean |K_off|':>13s} {'verdict':>34s}")
+    rows = []
+    for bw in (0.02, 0.05, 0.1, 0.25, 0.5, 1.0):
+        Kq = norm(quantum_kernel(Xs, Xs, bandwidth=bw))
+        w, V = np.linalg.eigh(Kq)
+        sq = (V * np.sqrt(np.clip(w, 0, None))) @ V.T
+        g = float(np.sqrt(np.abs(np.linalg.eigvalsh(sq @ Kc_inv @ sq)).max()))
+        mo = float(np.abs(Kq[off]).mean())
+        if mo < 0.05:
+            verdict = "kernel ~ identity: cannot generalise"
+        elif g < np.sqrt(m):
+            verdict = "g < sqrt(n): classical guaranteed >="
+        else:
+            verdict = "no guarantee either way"
+        print(f"  {bw:10.2f} {g:10.1f} {mo:13.3f} {verdict:>34s}")
+        rows.append((bw, g, mo))
+    return rows
 
 
 def gate2(X, y, seed=0):
-    """Effective rank of the classical kernel, and the non-linearity gap."""
+    """Is there non-linear structure to exploit -- with BOTH sides tuned?
+
+    Two traps this gate fell into before, both worth naming because they are the
+    standard ways this comparison goes wrong:
+
+    * **Accuracy at 2.4% positives.** An all-negative classifier scores 0.976, so
+      accuracy cannot separate a working model from a constant one. The first
+      version reported a non-linearity gap of exactly +0.000 for that reason.
+      Scored by AUC now.
+    * **An untuned classical kernel.** With rank-percentile features in [0,1] and
+      gamma = 1/d, every pairwise distance is small, the RBF matrix is nearly all
+      ones, and its effective rank collapses to ~2. Comparing an untuned quantum
+      kernel against an untuned classical one measures nothing. Gamma is swept.
+    """
+    from sklearn.metrics import roc_auc_score
     rng = np.random.default_rng(seed)
     idx = rng.choice(len(X), size=min(1500, len(X)), replace=False)
     Xs, ys = X[idx], y[idx]
-    K = rbf_kernel(Xs, Xs, gamma=1.0 / Xs.shape[1])
-    w = np.clip(np.linalg.eigvalsh(K), 0, None)
-    p = w / w.sum()
-    eff = float(np.exp(-(p[p > 0] * np.log(p[p > 0])).sum()))
     cut = int(0.7 * len(Xs))
-    lin = SVC(kernel="linear", C=1.0).fit(Xs[:cut], ys[:cut]).score(Xs[cut:], ys[cut:])
-    rbf = SVC(kernel="rbf", C=1.0, gamma="scale").fit(Xs[:cut], ys[:cut]).score(Xs[cut:], ys[cut:])
+    tr, te = slice(0, cut), slice(cut, None)
+
     print("\nGATE 2 — is there non-linear structure to exploit?")
-    print(f"  kernel effective rank {eff:.1f} of {len(Xs)}  "
-          f"({eff/len(Xs)*100:.1f}%)")
-    print(f"  linear SVM {lin:.3f}   RBF SVM {rbf:.3f}   non-linearity gap {rbf-lin:+.3f}")
-    return eff / len(Xs), float(rbf - lin)
+    print(f"  positives in the sample: {ys.mean()*100:.1f}%  "
+          f"(all-negative scores {1-ys.mean():.3f} on accuracy, hence AUC)")
+    print(f"  {'kernel':>12s} {'param':>10s} {'eff. rank':>10s} {'AUC':>7s}")
+
+    best = {}
+    for gamma in (0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 25.0):
+        K = rbf_kernel(Xs, Xs, gamma=gamma)
+        w = np.clip(np.linalg.eigvalsh(K), 0, None)
+        p = w / w.sum()
+        eff = float(np.exp(-(p[p > 0] * np.log(p[p > 0])).sum()))
+        mdl = SVC(kernel="rbf", C=1.0, gamma=gamma,
+                  class_weight="balanced").fit(Xs[tr], ys[tr])
+        auc = roc_auc_score(ys[te], mdl.decision_function(Xs[te]))
+        print(f"  {'RBF':>12s} {f'gamma={gamma:g}':>10s} {eff:10.1f} {auc:7.3f}")
+        if auc > best.get("RBF", (0, None))[0]:
+            best["RBF"] = (auc, gamma)
+    for name, kw in (("linear", dict(kernel="linear", C=1.0)),
+                     ("poly-4", dict(kernel="poly", degree=4, C=1.0, gamma="scale"))):
+        mdl = SVC(class_weight="balanced", **kw).fit(Xs[tr], ys[tr])
+        auc = roc_auc_score(ys[te], mdl.decision_function(Xs[te]))
+        print(f"  {name:>12s} {'-':>10s} {'-':>10s} {auc:7.3f}")
+        best[name] = (auc, None)
+
+    gap = best["RBF"][0] - best["linear"][0]
+    print(f"  best classical: RBF at gamma={best['RBF'][1]:g}, AUC {best['RBF'][0]:.3f}")
+    print(f"  non-linearity gap (best RBF - linear) {gap:+.3f}")
+    return best, float(gap)
 
 
 def main():
