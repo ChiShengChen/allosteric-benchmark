@@ -195,22 +195,32 @@ The strongest numbers here, decisively above the random control in both seeds, a
 so it is not a split artifact, but the paired test cannot separate them at n = 96.
 
 That was the whole open question, and the larger set of §1.6 answers it. At **1,042
-targets over 265 UniProt accessions** the margin does not grow. It shrinks, and the
-verdict stays seed-dependent:
+targets over 265 UniProt accessions** the margin does not grow — it shrinks:
 
-| | stratified AUC | GNN − ALPS | paired p |
+| | stratified AUC | vs ALPS | paired p |
 |---|---|---|---|
-| GNN, seed 0 | **0.632** | +0.0195 | 0.0447 |
-| GNN, seed 1 | **0.623** | +0.0113 | 0.1447 |
-| ALPS | 0.612 | — | — |
-| CONTROL `ctrl_dist` | 0.537 | — | — |
+| GNN, single run (8 runs, same seed) | **0.623 ± 0.010** | **+0.011 ± 0.009** | 0.05 – 0.70 |
+| ALPS (identical in all eight) | 0.612 | reference | — |
+| CONTROL `ctrl_dist` | 0.537 | −0.075 | — |
 
-Paired over the n = 1,016 targets where both methods are defined; floor 0.5020,
-re-estimated on that set rather than carried over. Ten times the targets did not turn
-+0.03 into a win, and a margin that shrinks as n grows usually means part of the
-smaller-sample margin was noise. **A learned message-passing model and a hand-designed
-spectral readout perform the same on this task** — a statement that now rests on
-n = 1,042 rather than on n = 96. Full numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
+Paired over the n = 1,016 targets where both are defined; floor 0.5020, re-estimated on
+that set rather than carried over. **A learned message-passing model and a hand-designed
+spectral readout perform the same on this task as single predictors** — now at n = 1,042
+rather than n = 96.
+
+Two seeds were reported here before, at +0.0195 (p = 0.0447) and +0.0113 (p = 0.1447),
+and read as a seed effect. They are not one: rerunning the *same* seed eight times spans
+−0.003 to +0.022 with p below 0.05 in two of eight, so run-to-run variance alone equals
+the effect. Pinning the OpenMP thread pool does not remove it. **Two seeds prove nothing
+when a fixed seed does not reproduce.**
+
+**The tie hides a complementarity.** Per target the two methods correlate at r = 0.146,
+and the GNN is ahead on 47% of targets — equal average skill, different failures. Fusing
+the two per-residue scores with the weight chosen on held-out folds
+([`gnn/fuse.py`](gnn/fuse.py)) gives **0.685, +0.073 over ALPS**, and averaging the
+scores of k identical runs — the same nondeterminism above, averaged instead of sampled
+— lifts the GNN alone from 0.610 to 0.663. A single run fused with ALPS costs nothing
+extra and is already +0.040. Full numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
 
 The ablation is the result worth keeping. The base model is **denied** the
 distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and
@@ -549,12 +559,32 @@ held and the observable was still uninformative.**
 one is not about accuracy at all:**
 
 1. **Algorithmic speedup rather than a better estimator.** Every negative result above is
-   about quantum failing to *predict* better. None of them touches cost. ALPS needs N
-   eigendecompositions, O(N⁴), and the cooperative experiment showed the true bottleneck
-   is building the coupling matrix — C(N, 2) eigendecompositions — not the search over
-   it. Estimating spectral shifts by quantum phase estimation on the walk operator would
-   not require full diagonalisation. This is the one framing that survives everything
-   measured here, precisely because it never claims better predictions.
+   about quantum failing to *predict* better. None of them touches cost. ALPS needs one
+   eigensolve per residue — N sparse shift-invert solves for the three lowest modes above
+   N = 400, dense below it, not the O(N⁴) this section used to claim — and the
+   cooperative experiment showed the true bottleneck is building the coupling matrix,
+   C(N, 2) eigendecompositions, not the search over it. Estimating spectral shifts by
+   quantum phase estimation on the walk operator would not require full diagonalisation.
+   This is the one framing that survives everything measured here, precisely because it
+   never claims better predictions.
+
+   **Now with a measured precision budget**
+   ([`scripts/precision_budget.py`](scripts/precision_budget.py), candidate 6 of
+   [`docs/quantum-observable-search.md`](docs/quantum-observable-search.md)). ALPS reads
+   eigenvalues and never eigenvectors, so the readout bottleneck that kills most quantum
+   linear algebra does not apply: the algorithm's output type and the score's input type
+   match. The relative eigenvalue shift being resolved has a median of **2.9 × 10⁻²**, and
+   corrupting every eigenvalue by one part in 10³ costs nothing while one part in 10²
+   costs **0.006** stratified AUC. **The precision requirement is 10²–10³ controlled-U
+   applications, not 10⁶** — the objection that looked fatal does not bind. Two costs
+   remain unmeasured and either could still consume the budget: state preparation and the
+   block-encoding oracle, both O(N).
+
+   The obvious classical attack on the same cost — first-order perturbation theory, one
+   decomposition per protein instead of N+1 — was measured and **rejected**: Spearman
+   0.984 against the exact score, and still −0.032 AUC, because a rank correlation over
+   ~500 residues can be near-perfect while the top of the ranking, the only part the
+   metric scores, is reshuffled.
 2. ~~Symmetric multimers.~~ **Tested and closed** — section 9. Symmetry does enrich
    spectral degeneracy, but not enough for an interference-dependent readout to win
    there. This was the last mechanism-backed candidate, and only the cost argument

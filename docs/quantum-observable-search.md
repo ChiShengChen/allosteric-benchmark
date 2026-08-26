@@ -295,6 +295,108 @@ it. Tensor-network methods appear only through the dequantization results — as
 
 ---
 
+## Candidate 6 — phase estimation of the spectral shift
+
+The five candidates above are all attempts to find an observable that *predicts better*,
+and all five failed. This one is different in kind: it never claims a better prediction,
+only a cheaper route to the same one. That is why README section 6 lists it as the single
+framing left standing.
+
+**Why the usual objection does not apply here.** Quantum linear algebra normally dies at
+readout: the answer is an N-dimensional amplitude vector, and extracting it costs O(N)
+measurements, which is the whole speedup. ALPS is immune to that, because it never
+touches an eigenvector. Its score is
+
+    out[i] = sum_{k<=3} |lambda_k(H_i) - lambda_k(H_0)| / lambda_k(H_0)
+
+a sum of scalars. Phase estimation returns exactly that type. The output of the algorithm
+and the input of the score match, which is rare enough to be worth stating.
+
+**So the deciding question is precision, and precision is measurable classically.** QPE's
+circuit depth scales as O(1/epsilon), so what settles whether this is worth implementing
+is how small epsilon has to be. `scripts/precision_budget.py` measures it on 25 curated
+targets (N <= 520) by multiplying every eigenvalue -- base and perturbed alike, since an
+estimator has to measure both ends of a difference -- by (1 + eta), eta uniform on
+[-epsilon, epsilon]. Uniform rather than Gaussian because QPE returns a value inside a
+resolution window, not a normal deviate around the truth.
+
+First, the size of the thing being resolved:
+
+| relative shift `|dlambda|/lambda` | median | IQR | 5-95% |
+|---|---|---|---|
+| pooled over residues and modes | **2.94e-2** | [1.04e-2, 6.50e-2] | [1.60e-3, 1.56e-1] |
+
+kappa = 2 stiffens each contact threefold, so the perturbation is not subtle and neither
+is its effect on the spectrum. A ~3% relative shift is a coarse signal, not the near-
+cancellation that makes small differences expensive to estimate.
+
+Then the sweep, distance-stratified AUC, 5 noise seeds:
+
+| epsilon | strat AUC | sd over seeds | vs exact |
+|---|---|---|---|
+| 0 (exact) | 0.612 | — | — |
+| 1e-4 | 0.612 | 0.0002 | +0.000 |
+| 1e-3 | 0.612 | 0.0008 | −0.000 |
+| **1e-2** | **0.607** | 0.0033 | **−0.006** |
+| 3e-2 | 0.592 | 0.0080 | −0.020 |
+| 1e-1 | 0.552 | 0.0121 | −0.060 |
+
+**One part in 10^3 is free and one part in 10^2 costs 0.006.** That is 10^2-10^3 applications
+of a controlled unitary, not 10^6. Whatever eventually rules this route out, it will not
+be the precision requirement — which was the objection that looked fatal before it was
+measured.
+
+### The classical shortcut that would have removed the object, and why it does not
+
+The cost argument only has force if the classical computation is genuinely expensive.
+ALPS diagonalises once per residue, so first-order perturbation theory is the obvious
+attack: lambda_k(H_i) - lambda_k(H_0) = v_k^T dL_i v_k needs **one** decomposition of H_0
+for the whole protein instead of N+1. kappa = 2 gives it no right to be accurate, but the
+score is only ever used as a ranking, and preserving order would be enough.
+
+It preserves order almost perfectly and still costs more than everything this repository
+has been chasing:
+
+| first-order perturbation theory | |
+|---|---|
+| Spearman against the exact raw score | median **0.984**, 100% of targets above 0.9 |
+| stratified AUC | **0.580** against 0.612 exact, **−0.032** |
+
+Those two rows are not in conflict, and the gap between them is the result. A rank
+correlation computed over ~500 residues can sit at 0.98 while the handful of candidates
+at the top of the ranking are reshuffled — and the top is the only part the metric
+scores. Section 10 of the main README records the same failure in other clothing: a
+flattering aggregate statistic standing in for behaviour in the region that decides the
+answer.
+
+0.032 is larger than the GNN's entire margin over ALPS, and three times the gain from
+retuning ALPS itself. So the N+1 eigendecompositions are not removable this way, and the
+cost the quantum framing proposes to attack is real.
+
+### What this does and does not establish
+
+Measured: the precision requirement, and that the classical work is not trivially
+avoidable. **Not measured, and either could still consume the whole budget:**
+
+* **State preparation.** QPE needs an input state overlapping the target eigenvector.
+  H_0's eigenvector is a natural warm start and is classically in hand, but loading an
+  arbitrary N-dimensional vector onto log2(N) qubits costs O(N) gates in general.
+* **Block encoding.** H_i is sparse (10-20 contacts per residue), and sparse Hamiltonian
+  simulation is a mature primitive, but building the oracle for an arbitrary protein's
+  contact graph costs what writing the matrix down costs, O(N·k).
+
+Both are linear in N, which is exactly the scale at which a speedup over an O(N^3)-ish
+classical solve stops being obvious. This section bounds one of three costs. It does not
+claim an advantage, and no circuit has been written.
+
+**A note on the complexity figure.** README section 6 describes ALPS as "N
+eigendecompositions, O(N^4)". That overstates the current implementation: `_low_eigs`
+switches to a sparse shift-invert solve for the three lowest modes above N = 400, so the
+real cost is N sparse solves, not N dense ones. The argument survives the correction --
+it is still linear in N solves -- but the exponent quoted is not what the code does.
+
+---
+
 ## What is still not covered
 
 Quantum reservoir computing: present in the corpus, no full text landed, no cards. Not a
