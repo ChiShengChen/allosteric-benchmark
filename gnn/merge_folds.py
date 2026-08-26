@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Merge the UniProt-grouped fold assignment into an already-built graph cache.
+"""Merge the UniProt accession and its grouped fold assignment into a graph cache.
 
 `data.py` predates the AlloBench route and does not carry `fold`. Rebuilding the
 cache to add one scalar per target would cost another four hours of eigensolves, so
@@ -17,11 +17,14 @@ ap.add_argument("--cache", default=os.path.join(HERE, "gnn", "graphs_allobench.n
 ap.add_argument("--targets", default=os.path.join(HERE, "data", "targets_allobench"))
 a = ap.parse_args()
 
-folds = {}
+folds, unis = {}, {}
 for f in glob.glob(os.path.join(a.targets, "*.npz")):
     z = np.load(f, allow_pickle=True)
+    key = os.path.basename(f)[:-4]
     if "fold" in z.files:
-        folds[os.path.basename(f)[:-4]] = int(z["fold"])
+        folds[key] = int(z["fold"])
+    if "uniprot" in z.files:
+        unis[key] = str(z["uniprot"])
 
 data = list(np.load(a.cache, allow_pickle=True)["data"])
 hit = 0
@@ -29,6 +32,8 @@ for r in data:
     if r["t"] in folds:
         r["fold"] = folds[r["t"]]
         hit += 1
+    if r["t"] in unis:
+        r["uniprot"] = unis[r["t"]]
 np.savez_compressed(a.cache, data=np.array(data, dtype=object))
 print(f"merged folds into {hit}/{len(data)} targets")
 if hit != len(data):
@@ -38,3 +43,7 @@ else:
     u = sorted({r["fold"] for r in data})
     print(f"fold ids {u}, sizes " +
           ", ".join(str(sum(1 for r in data if r['fold'] == k)) for k in u))
+    nu = sum(1 for r in data if "uniprot" in r)
+    print(f"uniprot merged into {nu}/{len(data)} targets "
+          f"({len({r.get('uniprot') for r in data})} distinct) — "
+          f"lets run.py group the INNER validation split too")

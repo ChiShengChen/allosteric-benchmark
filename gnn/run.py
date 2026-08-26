@@ -146,13 +146,38 @@ def main():
     for k in range(a.folds):
         te = [i for i in range(n) if fold[i] == k]
         rest = [i for i in range(n) if fold[i] != k]
-        rng.shuffle(rest)
-        cut = max(3, len(rest) // 6)
-        va, tr = rest[:cut], rest[cut:]
+        # The inner validation split must be grouped too. The test fold is grouped by
+        # UniProt, but carving validation out at random lets homologues of the same
+        # accession sit on both sides -- and AlloBench carries up to six structures per
+        # protein, so that is not hypothetical. It does not contaminate the test number,
+        # which early stopping never sees; it corrupts the *selection criterion*, which
+        # then prefers checkpoints good at recognising a family over ones that
+        # generalise. On the curated set this was invisible: one structure per protein
+        # means a random inner split is already effectively grouped.
+        if all("uniprot" in data[i] for i in rest):
+            byu = {}
+            for i in rest:
+                byu.setdefault(str(data[i]["uniprot"]), []).append(i)
+            keys = list(byu)
+            rng.shuffle(keys)
+            want, va = max(3, len(rest) // 6), []
+            for u in keys:
+                if len(va) >= want:
+                    break
+                va.extend(byu[u])
+            vaset = set(va)
+            tr = [i for i in rest if i not in vaset]
+            inner = "UniProt-grouped"
+        else:
+            rng.shuffle(rest)
+            cut = max(3, len(rest) // 6)
+            va, tr = rest[:cut], rest[cut:]
+            inner = "random"
         model, best = train_fold(data, tr, va, a.with_dist, a.hidden, a.layers,
                                  a.epochs, a.lr, a.seed + k)
-        print(f"fold {k}: train {len(tr)} val {len(va)} test {len(te)} proteins, "
-              f"best val stratAUC {best:.3f}, {model.n_params} params", flush=True)
+        print(f"fold {k}: train {len(tr)} val {len(va)} ({inner}) test {len(te)} "
+              f"proteins, best val stratAUC {best:.3f}, {model.n_params} params",
+              flush=True)
         per["GNN"].update(evaluate(model, data, te, a.with_dist))
         for i in te:
             r = data[i]
