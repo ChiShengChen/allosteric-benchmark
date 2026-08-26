@@ -116,7 +116,8 @@ def main():
 
     cols = {
         "ALPS": {r["t"]: auc(r, r["a"]) for r in recs},
-        "GNN, 1 run": {r["t"]: auc(r, r["g"][0]) for r in recs},
+        "GNN, 1 run (mean)": {r["t"]: float(np.nanmean([auc(r, g) for g in r["g"]]))
+                              for r in recs},
         f"GNN, {k}-run mean": {r["t"]: auc(r, np.mean(r["g"], axis=0)) for r in recs},
         "fuse 50/50 (fixed)": {r["t"]: auc(r, mix(r, 0.5, k)) for r in recs},
         "fuse (nested w)": nested,
@@ -137,10 +138,23 @@ def main():
               f"{np.nanmean(v[ok]-base[ok]):+9.4f} {p:>10s}")
 
     if k > 1:
-        print(f"\n{'k runs':>7s} {'GNN mean':>9s} {'fuse 50/50':>11s}")
+        # Average over subsets of size kk, not the first kk runs. Taking the first kk
+        # makes every row inherit whichever run happens to be dump 0: on the AlloBench
+        # set that run scored 0.610 against a 0.623 mean, which inflated the reported
+        # ensemble gain by the better part of a hundredth before this was fixed.
+        import itertools
+        rng = np.random.default_rng(0)
+        print(f"\n{'k runs':>7s} {'GNN mean':>9s} {'fuse 50/50':>11s}   "
+              f"(averaged over subsets)")
         for kk in range(1, k + 1):
-            e = np.nanmean([auc(r, np.mean(r["g"][:kk], axis=0)) for r in recs])
-            f = np.nanmean([auc(r, mix(r, 0.5, kk)) for r in recs])
+            combos = list(itertools.combinations(range(k), kk))
+            if len(combos) > 10:
+                combos = [tuple(rng.choice(k, kk, replace=False)) for _ in range(10)]
+            e = np.mean([np.nanmean([auc(r, np.mean([r["g"][i] for i in c], axis=0))
+                                     for r in recs]) for c in combos])
+            f = np.mean([np.nanmean([auc(r, 0.5 * np.mean([r["g"][i] for i in c], axis=0)
+                                         + 0.5 * r["a"]) for r in recs])
+                         for c in combos])
             print(f"{kk:7d} {e:9.3f} {f:11.3f}")
 
 

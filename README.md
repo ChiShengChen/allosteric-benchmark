@@ -217,10 +217,16 @@ when a fixed seed does not reproduce.**
 **The tie hides a complementarity.** Per target the two methods correlate at r = 0.146,
 and the GNN is ahead on 47% of targets — equal average skill, different failures. Fusing
 the two per-residue scores with the weight chosen on held-out folds
-([`gnn/fuse.py`](gnn/fuse.py)) gives **0.685, +0.073 over ALPS**, and averaging the
-scores of k identical runs — the same nondeterminism above, averaged instead of sampled
-— lifts the GNN alone from 0.610 to 0.663. A single run fused with ALPS costs nothing
-extra and is already +0.040. Full numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
+([`gnn/fuse.py`](gnn/fuse.py)) gives **0.685, +0.073 over ALPS**; a single GNN run mixed
+50/50 with ALPS costs nothing extra and is already +0.045.
+
+**It replicates on the curated set**, where the same fixed 50/50 mix scores 0.625
+against ALPS's 0.592, **+0.033 at paired p = 2.4e-03** — the first result here to clear
+this repository's own Bonferroni threshold (0.05/11 = 0.0045) against ALPS, on a
+different label rule and a twentieth of the targets. The second gain does *not*
+replicate: averaging k identical runs lifts the AlloBench GNN by +0.041 and the curated
+GNN by +0.003, so it is recorded as dataset-dependent rather than as a technique. Full
+numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
 
 The ablation is the result worth keeping. The base model is **denied** the
 distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and

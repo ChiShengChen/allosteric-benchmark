@@ -97,7 +97,7 @@ choose the weight **on the other folds** and never on the fold being scored:
 | method | stratified AUC | vs floor | vs ALPS | paired p |
 |---|---|---|---|---|
 | ALPS | 0.612 | +0.110 | reference | — |
-| GNN, 1 run | 0.610 | +0.108 | −0.002 | 2.8e-01 |
+| GNN, 1 run (mean over the 7) | 0.622 | +0.120 | +0.010 | 7.8e-01 |
 | GNN, 7-run mean | 0.663 | +0.161 | +0.051 | 1.8e-07 |
 | fuse 50/50, fixed | 0.673 | +0.171 | +0.061 | 2.9e-50 |
 | **fuse, nested weight** | **0.685** | **+0.183** | **+0.073** | 2.4e-30 |
@@ -111,24 +111,55 @@ Two separable gains, at different prices:
 
 | k runs averaged | GNN alone | fused 50/50 |
 |---|---|---|
-| 1 | 0.610 | **0.652** |
-| 3 | 0.650 | 0.671 |
-| 5 | 0.662 | 0.673 |
+| 1 | 0.622 | **0.657** |
+| 3 | 0.652 | 0.669 |
+| 5 | 0.658 | 0.671 |
 | 7 | 0.663 | 0.673 |
 
-**Fusion costs nothing** — both score vectors already exist, and a single GNN run mixed
-with ALPS is +0.040 over ALPS alone. **Averaging runs costs k times the training** and
-adds another +0.05 to the GNN on its own, saturating around k = 5.
+Each row averages over subsets of that size rather than taking the first k dumps. That
+matters: the first AlloBench dump happened to score 0.610 against a 0.623 single-run
+mean, and reading the k = 1 row off it inflated the apparent ensemble gain from +0.041
+to +0.051 in the first version of this section.
+
+**Fusion costs nothing** — both score vectors already exist, and one GNN run mixed with
+ALPS is **+0.045** over ALPS alone. **Averaging runs costs k times the training** and
+adds a further +0.041 to the GNN on its own, saturating around k = 5.
 
 That second gain is the run-to-run noise from the section above, read the other way
 round: at the per-residue level it is largely independent between runs, so averaging
-removes it. The single-run number was being held down by its own irreproducibility.
-The same nondeterminism that invalidated the two-seed claim is, once averaged rather
-than sampled, the largest single improvement measured in this repository.
+removes it, and the single-run number was being held down by its own irreproducibility.
+
+### Both claims were re-run on the curated set, and only one replicated
+
+Four runs at seed 0 on the 96 curated targets, same script, floor 0.4963:
+
+| method | stratified AUC | vs ALPS | paired p |
+|---|---|---|---|
+| ALPS | 0.592 | reference | — |
+| GNN, 1 run (mean over the 4) | 0.616 | +0.024 | 3.0e-01 |
+| GNN, 4-run mean | 0.619 | +0.027 | 2.3e-01 |
+| **fuse 50/50, fixed** | **0.625** | **+0.033** | **2.4e-03** |
+| fuse, nested weight | 0.629 | +0.036 | 2.8e-02 |
+| CONTROL `ctrl_dist` | 0.509 | −0.083 | 1.0e-03 |
+| CONTROL `ctrl_random` | 0.497 | −0.095 | 4.0e-04 |
+
+**Fusion replicates.** +0.033 here against +0.061 there, on a different label rule,
+different coordinates and a twentieth of the targets — and at p = 2.4e-03 the fixed
+50/50 mix is the first result in this repository to clear the Bonferroni threshold it
+uses elsewhere (0.05/11 = 0.0045) against ALPS. The nested weight scores higher and
+tests worse (p = 2.8e-02), which is the price of letting the weight vary per fold. All
+nine folds across both datasets chose 0.7 or 0.8, so the mixture ratio is stable even
+where the gain is not.
+
+**Averaging runs does not replicate.** k = 1 to 4 moves the curated GNN from 0.616 to
+0.619, +0.003, against +0.041 on AlloBench. Same procedure, same seed handling, two
+very different answers, and nothing measured here explains which property of the two
+sets decides it. Recorded as dataset-dependent rather than as a technique — it earns
+its k trainings on one of the two sets tried.
 
 None of this changes the head-to-head verdict. The GNN does not beat ALPS as a
-predictor. It carries information ALPS does not, which is a different claim, and only
-the second one survives a paired test.
+predictor on either set. It carries information ALPS does not, which is a different
+claim, and it is the fused score, not the GNN, that survives a paired test.
 
 ### The control instability is a small-sample artefact, and it is gone
 
