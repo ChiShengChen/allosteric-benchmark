@@ -194,6 +194,24 @@ The strongest numbers here, decisively above the random control in both seeds, a
 **not** distinguishable from ALPS: the margin reproduces across two independent splits,
 so it is not a split artifact, but the paired test cannot separate them at n = 96.
 
+That was the whole open question, and the larger set of §1.6 answers it. At **1,042
+targets over 265 UniProt accessions** the margin does not grow. It shrinks, and the
+verdict stays seed-dependent:
+
+| | stratified AUC | GNN − ALPS | paired p |
+|---|---|---|---|
+| GNN, seed 0 | **0.632** | +0.0195 | 0.0447 |
+| GNN, seed 1 | **0.623** | +0.0113 | 0.1447 |
+| ALPS | 0.612 | — | — |
+| CONTROL `ctrl_dist` | 0.537 | — | — |
+
+Paired over the n = 1,016 targets where both methods are defined; floor 0.5020,
+re-estimated on that set rather than carried over. Ten times the targets did not turn
++0.03 into a win, and a margin that shrinks as n grows usually means part of the
+smaller-sample margin was noise. **A learned message-passing model and a hand-designed
+spectral readout perform the same on this task** — a statement that now rests on
+n = 1,042 rather than on n = 96. Full numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
+
 The ablation is the result worth keeping. The base model is **denied** the
 distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and
 that a learned combiner handed distance reproduces it. Giving the GNN that channel makes
