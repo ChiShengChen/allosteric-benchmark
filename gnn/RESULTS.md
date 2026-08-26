@@ -15,114 +15,120 @@ test fold. 14,161 parameters, hidden 24, 4 layers.
 
 ### The headline
 
-| | stratified AUC | vs floor | p vs random | GNN − ALPS | paired p |
-|---|---|---|---|---|---|
-| **GNN**, seed 0 | **0.622** | +0.126 | 0.0000 | +0.030 | 0.136 |
-| **GNN**, seed 1 | **0.630** | +0.134 | 0.0000 | +0.038 | 0.151 |
-| GNN + dist channel, seed 0 | 0.595 | +0.099 | 0.0002 | +0.003 | 0.787 |
-| ALPS (deterministic) | 0.592 | +0.096 | — | — | — |
-| CONTROL `ctrl_dist` | 0.509 | +0.013 | — | — | — |
+Eight runs at the same seed, because two turned out not to be enough — see below.
 
-The GNN is the strongest method this repository has produced, and it beats the random
-control decisively in both seeds. **It does not beat ALPS.** The gap reproduces across
-two independent splits — +0.030 and +0.038, so it is not a split artifact — but the
-paired test cannot separate the two at n = 96, twice, at p ≈ 0.14. Under the
-Bonferroni threshold this repository uses elsewhere (0.05/11 = 0.0045) it is not close.
+| | stratified AUC | vs floor | vs ALPS | paired p |
+|---|---|---|---|---|
+| **GNN**, single run | **0.623 ± 0.010** | +0.121 | **+0.011 ± 0.009** | 0.05–0.70 |
+| ALPS (deterministic, identical every run) | 0.612 | +0.110 | reference | — |
+| CONTROL `ctrl_dist` | 0.537 | +0.035 | −0.075 | — |
+| CONTROL `ctrl_random` | 0.496 | −0.006 | −0.116 | — |
 
-The honest statement is: **a learned message-passing model and a hand-designed
-spectral readout perform the same on this task, with the GNN nominally ahead.**
+Mean ± sd over eight runs at seed 0; ALPS returns the same 0.612 in all eight. Paired
+over the n = 1,016 targets where both methods are defined. "vs floor" uses **0.5020**,
+re-estimated on this set (below) — not the 0.4963 constant `gnn/run.py` prints by
+default, which belongs to the curated set.
 
-### The ablation is the interesting result
+### The margin did not survive the larger sample, and neither did its p-value
 
-Handing the model the distance-to-anchor channel makes it **worse** — 0.622 → 0.595 —
-and collapses its margin over ALPS from +0.030 to +0.003.
+n = 96 diagnosed the problem correctly — the limit was target-level variance — but ten
+times the targets did not convert the margin into a win. It shrank it, from +0.030 /
++0.038 on the curated set to **+0.011 ± 0.009**, and the paired p across eight identical
+runs ranges from 0.046 to 0.702, landing below 0.05 in **two of eight**. Against the
+Bonferroni threshold used elsewhere here (0.05/11 = 0.0045), none of them is close.
 
-This is stronger than "the restraint cost nothing". Denying the confound *helped*.
-Given the channel, the network spends capacity reproducing distance instead of
-learning propagation on the graph; denied it, it finds something distance does not
-already encode. That is the same behaviour §10 measured on the learned combiner,
-reproduced now in a completely different model family — which makes it look like a
-property of the task rather than of any one architecture.
+A margin that shrinks as n grows is the signature of a small-sample effect that was
+partly noise, not of a real one finally becoming measurable.
 
-So part of the base model's 0.622 exists *because* it was not given distance.
+**The statement stands at n = 1,042: as single predictors, a learned message-passing
+model and a hand-designed spectral readout perform the same on this task.** What
+changed is that this is no longer an artefact of a small sample. It is the result —
+and, per the fusion section below, it is also not the whole story, because two methods
+of equal average skill can still be worth combining.
 
-### What the two seeds say about the controls
+### Two seeds was never enough, because the same seed does not reproduce
 
-| seed | `ctrl_random` |
+An earlier version of this file reported +0.0195 at p = 0.0447 for seed 0 and +0.0113
+at p = 0.1447 for seed 1, and read the pair as a seed effect. It is not one. Rerunning
+**seed 0** eight times, changing nothing, gives:
+
+| | |
 |---|---|
-| 0 | 0.522 |
-| 1 | 0.480 |
+| GNN stratified AUC | 0.609 – 0.634, sd 0.0095 |
+| GNN − ALPS | −0.0030 to +0.0218, mean +0.0107, sd 0.0094 |
+| runs reporting p < 0.05 | 2 of 8 |
 
-Two draws, 0.042 apart, bracketing the 25-seed floor estimate of 0.4963 ± 0.0157. This
-is why the "vs floor" column uses the multi-seed estimate and not the run's own draw —
-a single draw treated as the floor is an error recorded in §10 of the main README.
+**The run-to-run spread at a fixed seed is the same size as the effect being
+measured.** The published +0.0195 / p = 0.0447 was a high draw from that distribution,
+and seed 1's 0.623 sits in the middle of seed 0's own range — so there is no detectable
+seed effect at all. What looked like two independent confirmations was one distribution
+sampled twice.
 
-The instability propagates. `ctrl_dist` scores 0.509 in both runs, being
-deterministic, yet its p against the random control is 0.4120 under seed 0 and 0.0076
-under seed 1 — the same number, two very different verdicts, purely because the
-comparison moved. Any p-value in this repository computed against a *single* random
-draw should be read with that spread in mind.
+The cause is not the obvious one. Twenty training steps reproduce bit-for-bit across
+processes at a fixed thread count, so the first suspect was the OpenMP pool shrinking
+under load. Pinning it (`OMP_DYNAMIC=FALSE`) was tested against the default in two waves
+of three runs each and **did not remove the spread** (pinned 0.621/0.634/0.626, default
+0.621/0.609/0.630). The remaining candidate is the parallel reduction in `index_add_` on
+the larger graphs, which the twenty-step probe was too small to trigger. A reproducible
+number would need single-threaded execution, at roughly eight times the cost.
 
-### Why more seeds will not fix this, and what would
+The methodological point generalises past this model: **reporting two seeds proves
+nothing when run-to-run variance at a fixed seed equals the effect.** The curated-set
+numbers in this file were reported the same way and carry the same caveat.
 
-The paired test is over 96 targets. Running more seeds averages away initialisation
-and split noise, which is already small — the two seeds agree to 0.008. It does
-nothing about target-level variance, which is what n = 96 limits.
+### The tie hid a complementarity, and it is worth 0.07
 
-That is precisely the constraint the literature survey identified
-([`../docs/ai-model-landscape.md`](../docs/ai-model-landscape.md)) and the vendored
-AlloBench pipeline addresses. Whether a +0.03 margin is real is answerable at that
-scale and not at this one. The next section runs it, and the answer is no.
+Equal average skill does not mean the same predictions. Per target, the two barely
+agree:
 
-Two things must not be smoothed over in reading that section: those coordinates are
-Cα where ours are Cβ, and those labels are 4 Å-to-modulator where ours are expert
-annotation. §1.5 of the main README records why the two sets are evaluated separately
-rather than pooled.
+| GNN against ALPS, per target | |
+|---|---|
+| Pearson r | **0.146** |
+| Spearman | 0.100 |
+| targets where the GNN is ahead | 47% |
+| oracle ceiling, cross-fitted | **0.708** against 0.612 |
 
-## The AlloBench set
+The ceiling picks the better method per target using disjoint runs to decide and to
+score, so it is not selection on noise; the naive version is 0.714, barely higher.
 
-1,042 targets over 265 distinct UniProt accessions, 369,988 residues in the pool at
-2.63% positive — 9.3× the evaluable positives of the curated set. The 5-fold split is
-grouped by UniProt accession and carried in the dataset rather than assigned here, so
-homologues of the same protein cannot straddle the test boundary. Same model,
-unchanged: 14,161 parameters, hidden 24, 4 layers.
+`gnn/fuse.py` does the combination properly — rank-percentile both scores, mix them,
+choose the weight **on the other folds** and never on the fold being scored:
 
-The build came in below the 1,439 samples over 327 accessions the pipeline
-advertises: 1,042 over 265 survive structure retrieval and the evaluability filter (a
-target needs at least one positive inside the distal non-anchor pool). Every number
-here is on what was actually built.
+| method | stratified AUC | vs floor | vs ALPS | paired p |
+|---|---|---|---|---|
+| ALPS | 0.612 | +0.110 | reference | — |
+| GNN, 1 run | 0.610 | +0.108 | −0.002 | 2.8e-01 |
+| GNN, 7-run mean | 0.663 | +0.161 | +0.051 | 1.8e-07 |
+| fuse 50/50, fixed | 0.673 | +0.171 | +0.061 | 2.9e-50 |
+| **fuse, nested weight** | **0.685** | **+0.183** | **+0.073** | 2.4e-30 |
+| CONTROL `ctrl_dist` | 0.537 | +0.035 | −0.075 | — |
+| CONTROL `ctrl_random` | 0.496 | −0.006 | −0.116 | — |
 
-### The headline
+All five folds independently selected w = 0.7 on their training data, so the 70/30 mix
+is what honest selection picks, not what reading the test numbers suggests.
 
-| | stratified AUC | vs floor | p vs random | GNN − ALPS | paired p |
-|---|---|---|---|---|---|
-| **GNN**, seed 0 | **0.632** | +0.130 | 0.0000 | +0.0195 | **0.0447** |
-| **GNN**, seed 1 | **0.623** | +0.121 | 0.0000 | +0.0113 | 0.1447 |
-| ALPS (deterministic) | 0.612 | +0.110 | 0.0000 | — | — |
-| CONTROL `ctrl_dist` | 0.537 | +0.035 | 0.0000 | — | — |
-| CONTROL `ctrl_random` | 0.495 / 0.502 | −0.007 / +0.000 | reference | — | — |
+Two separable gains, at different prices:
 
-Paired over the n = 1,016 targets where both methods return a defined AUC. "vs floor"
-uses **0.5020**, re-estimated on this set (below) — not the 0.4963 constant
-`gnn/run.py` still prints by default, which belongs to the curated set.
+| k runs averaged | GNN alone | fused 50/50 |
+|---|---|---|
+| 1 | 0.610 | **0.652** |
+| 3 | 0.650 | 0.671 |
+| 5 | 0.662 | 0.673 |
+| 7 | 0.663 | 0.673 |
 
-### The margin did not survive the larger sample
+**Fusion costs nothing** — both score vectors already exist, and a single GNN run mixed
+with ALPS is +0.040 over ALPS alone. **Averaging runs costs k times the training** and
+adds another +0.05 to the GNN on its own, saturating around k = 5.
 
-n = 96 diagnosed the problem correctly — the limit was target-level variance — but
-supplying ten times the targets did not convert the margin into a win. It shrank it,
-from +0.030 / +0.038 to **+0.0195 / +0.0113**, and left the verdict seed-dependent:
-p = 0.0447 under seed 0, p = 0.1447 under seed 1. Against the Bonferroni threshold
-this repository uses elsewhere (0.05/11 = 0.0045), neither is close.
+That second gain is the run-to-run noise from the section above, read the other way
+round: at the per-residue level it is largely independent between runs, so averaging
+removes it. The single-run number was being held down by its own irreproducibility.
+The same nondeterminism that invalidated the two-seed claim is, once averaged rather
+than sampled, the largest single improvement measured in this repository.
 
-A margin that shrinks as n grows is the signature of a small-sample effect being
-partly noise, not of a real effect finally becoming measurable. The direction is
-consistent across four runs on two datasets, which is worth something; the size is
-not what the curated set suggested.
-
-**The statement stands, now at n = 1,042: a learned message-passing model and a
-hand-designed spectral readout perform the same on this task, with the GNN nominally
-ahead.** What changed is that this is no longer an artefact of a small sample — it is
-the result.
+None of this changes the head-to-head verdict. The GNN does not beat ALPS as a
+predictor. It carries information ALPS does not, which is a different claim, and only
+the second one survives a paired test.
 
 ### The control instability is a small-sample artefact, and it is gone
 
