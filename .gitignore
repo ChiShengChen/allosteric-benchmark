@@ -4,9 +4,11 @@ data/pdb_cache/
 *.log
 .venv/
 
-# derived cache: 72 MB, rebuilt by gnn/data.py in ~25 min.
-# The datasets in data/ are the artifact; this is not one.
-gnn/graphs.npz
+# Derived caches, rebuilt by gnn/data.py. The datasets in data/ are the artifact;
+# these are not. Pattern, not a literal name: an earlier literal `gnn/graphs.npz`
+# failed to catch `gnn/graphs_allobench.npz` and a half-written 52 MB file got
+# committed while it was still being appended to.
+gnn/graphs*.npz
 
 # ASD-derived annotations: upstream deliberately does not redistribute these,
 # and neither do we. Rebuild with scripts/build_allobench.sh.
