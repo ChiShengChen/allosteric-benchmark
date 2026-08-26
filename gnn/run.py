@@ -53,15 +53,25 @@ def to_torch(r, with_dist):
 
 
 def evaluate(model, data, idx, with_dist):
+    """Per-target stratified AUC, and the per-residue scores behind it.
+
+    The scores used to be discarded at the end of the loop. A run over the AlloBench
+    set costs about an hour, and every question that comes after it -- is the GNN
+    wrong on the same targets ALPS is wrong on, does fusing them help, where do the
+    top-ranked residues actually land -- needs the scores, not the summary. Throwing
+    them away means the answer to each of those costs another hour, and a model
+    retrained later is not bit-for-bit the same model. So --dump keeps them.
+    """
     model.eval()
-    out = {}
+    out, raw = {}, {}
     with torch.no_grad():
         for i in idx:
             r = data[i]
             s = model(*to_torch(r, with_dist)).numpy().astype(float)
             auc, _ = stratified_auc(r["y"], s, r["pool"], r["dist"], 2.0)
             out[r["t"]] = auc
-    return out
+            raw[r["t"]] = s.astype(np.float32)
+    return out, raw
 
 
 def train_fold(data, tr, va, with_dist, hidden, layers, epochs, lr, seed):
@@ -92,7 +102,7 @@ def train_fold(data, tr, va, with_dist, hidden, layers, epochs, lr, seed):
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
         if (ep + 1) % 5 == 0:
-            v = float(np.nanmean(list(evaluate(model, data, va, with_dist).values())))
+            v = float(np.nanmean(list(evaluate(model, data, va, with_dist)[0].values())))
             if v > best:
                 best, bad = v, 0
                 best_state = {k: t.clone() for k, t in model.state_dict().items()}
@@ -118,6 +128,9 @@ def main():
                     help="ablation: hand the model the distance channel it is "
                          "otherwise made to discover")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--dump", default=None,
+                    help="write per-target AUCs and per-residue GNN scores to this "
+                         ".npz, so downstream analysis never has to retrain")
     ap.add_argument("--floor", type=float, default=FLOOR,
                     help="noise floor for the 'vs floor' column; re-estimate it "
                          "whenever the target set changes (gnn/floor_allobench.py)")
@@ -143,6 +156,7 @@ def main():
     print(f"split: {grouping}", flush=True)
 
     per = {k: {} for k in ("GNN", "alps", "ctrl_dist", "ctrl_random")}
+    gnn_scores = {}
     for k in range(a.folds):
         te = [i for i in range(n) if fold[i] == k]
         rest = [i for i in range(n) if fold[i] != k]
@@ -178,7 +192,9 @@ def main():
         print(f"fold {k}: train {len(tr)} val {len(va)} ({inner}) test {len(te)} "
               f"proteins, best val stratAUC {best:.3f}, {model.n_params} params",
               flush=True)
-        per["GNN"].update(evaluate(model, data, te, a.with_dist))
+        auc_gnn, raw_gnn = evaluate(model, data, te, a.with_dist)
+        per["GNN"].update(auc_gnn)
+        gnn_scores.update(raw_gnn)
         for i in te:
             r = data[i]
             for name, s in (("alps", r["alps"]),
@@ -213,6 +229,20 @@ def main():
     ok = ~np.isnan(g) & ~np.isnan(c)
     print(f"\nGNN - ALPS: {np.mean(g[ok]-c[ok]):+.4f}   "
           f"paired p {stats.wilcoxon(g[ok], c[ok]).pvalue:.4f}   (n={ok.sum()})")
+
+    if a.dump:
+        ts = [r["t"] for r in data]
+        np.savez_compressed(
+            a.dump,
+            t=np.array(ts, dtype=object),
+            fold=fold,
+            uniprot=np.array([str(r.get("uniprot", "")) for r in data], dtype=object),
+            n_res=np.array([len(r["y"]) for r in data], dtype=np.int32),
+            gnn_score=np.array([gnn_scores.get(t) for t in ts], dtype=object),
+            **{f"auc_{k}": np.array([per[k].get(t, np.nan) for t in ts], float)
+               for k in per},
+            meta=np.array(f"seed={a.seed} with_dist={a.with_dist} cache={a.cache}"))
+        print(f"dumped per-target AUCs and per-residue scores -> {a.dump}")
 
 
 if __name__ == "__main__":
