@@ -15,6 +15,109 @@ test fold. 14,161 parameters, hidden 24, 4 layers.
 
 ### The headline
 
+Four runs at the same seed. The two-seed version this section used to report is
+corrected below and in the AlloBench section, which is where the spread was measured
+properly.
+
+| | stratified AUC | vs floor | vs ALPS | paired p |
+|---|---|---|---|---|
+| **GNN**, single run | **0.616 ± 0.007** | +0.120 | **+0.024 ± 0.007** | 0.17 – 0.50 |
+| GNN + dist channel, one run | 0.595 | +0.099 | +0.003 | 0.787 |
+| ALPS (deterministic, identical every run) | 0.592 | +0.096 | reference | — |
+| CONTROL `ctrl_dist` | 0.509 | +0.013 | −0.083 | — |
+
+Mean ± sd over four runs at seed 0 (0.607, 0.615, 0.618, 0.623); ALPS returns 0.592 in
+all four. The GNN is the strongest single predictor this repository has produced and
+beats the random control decisively in every run. **It does not beat ALPS** — the
+paired test cannot separate them at n = 96, and under the Bonferroni threshold used
+elsewhere here (0.05/11 = 0.0045) it is not close.
+
+**What this table used to say, and why it was wrong.** It reported seed 0 at 0.622 and
+seed 1 at 0.630 and read the pair as two independent confirmations: "the gap reproduces
+across two independent splits, so it is not a split artifact." Rerunning seed 0 alone
+four times spans 0.607 to 0.623, so 0.622 was a high draw and 0.630 is one more sample
+from the same distribution. There was no second confirmation. The mechanism, and the
+eight-run version of the same measurement, are in the AlloBench section below.
+
+The honest statement is unchanged: **a learned message-passing model and a
+hand-designed spectral readout perform the same on this task, with the GNN nominally
+ahead.** What is new is that fusing them does better than either — see below.
+
+### The ablation is the interesting result
+
+Handing the model the distance-to-anchor channel makes it **worse** — 0.616 → 0.595 —
+and collapses its margin over ALPS from +0.024 to +0.003.
+
+This is stronger than "the restraint cost nothing". Denying the confound *helped*.
+Given the channel, the network spends capacity reproducing distance instead of
+learning propagation on the graph; denied it, it finds something distance does not
+already encode. That is the same behaviour §10 measured on the learned combiner,
+reproduced now in a completely different model family — which makes it look like a
+property of the task rather than of any one architecture.
+
+The gap is 0.021 against a run-to-run sd of 0.007, so roughly three times the noise and
+it survives the correction above. The distance-channel arm was run once, though, and
+its own spread has not been measured.
+
+### What the two seeds say about the controls
+
+| seed | `ctrl_random` |
+|---|---|
+| 0 | 0.522 |
+| 1 | 0.480 |
+
+Two draws, 0.042 apart, bracketing the 25-seed floor estimate of 0.4963 ± 0.0157. This
+is why the "vs floor" column uses the multi-seed estimate and not the run's own draw —
+a single draw treated as the floor is an error recorded in §10 of the main README.
+
+The instability propagates. `ctrl_dist` scores 0.509 in both runs, being
+deterministic, yet its p against the random control is 0.4120 under seed 0 and 0.0076
+under seed 1 — the same number, two very different verdicts, purely because the
+comparison moved. Any p-value in this repository computed against a *single* random
+draw should be read with that spread in mind.
+
+### Why more seeds will not fix this, and what would
+
+The paired test is over 96 targets, and target-level variance is what n = 96 limits.
+More seeds do not touch it.
+
+*(This section used to argue the point by saying initialisation and split noise were
+"already small — the two seeds agree to 0.008". That agreement was luck: four runs at
+one seed span 0.016. The conclusion survives the correction, because target-level
+variance is a separate quantity from run noise and is still what n = 96 bounds.)*
+
+That is precisely the constraint the literature survey identified
+([`../docs/ai-model-landscape.md`](../docs/ai-model-landscape.md)) and the vendored
+AlloBench pipeline addresses. Whether a +0.03 margin is real is answerable at that
+scale and not at this one. The next section runs it, and the answer is no.
+
+Two things must not be smoothed over in reading that section: those coordinates are
+Cα where ours are Cβ, and those labels are 4 Å-to-modulator where ours are expert
+annotation. §1.5 of the main README records why the two sets are evaluated separately
+rather than pooled.
+
+## The AlloBench set
+
+1,042 targets over 265 distinct UniProt accessions, 369,988 residues in the pool at
+2.63% positive — 9.3× the evaluable positives of the curated set. The 5-fold split is
+grouped by UniProt accession and carried in the dataset rather than assigned here, so
+homologues of the same protein cannot straddle the test boundary. Same model,
+unchanged: 14,161 parameters, hidden 24, 4 layers.
+
+The build came in below the 1,439 samples over 327 accessions the pipeline
+advertises: 1,042 over 265 survive structure retrieval and the evaluability filter (a
+target needs at least one positive inside the distal non-anchor pool). Every number
+here is on what was actually built.
+
+**The two sets share most of their structures.** 75 of the 94 distinct curated PDB ids
+(80%) also appear here, and at least 66 of the 265 accessions contain a curated
+structure. That does not break the separation rule — the labels and coordinates differ
+and the sets are never pooled — but it means the AlloBench result is not an independent
+sample of proteins, and **training on one and testing on the other would be 80%
+contaminated**.
+
+### The headline
+
 Eight runs at the same seed, because two turned out not to be enough — see below.
 
 | | stratified AUC | vs floor | vs ALPS | paired p |

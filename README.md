@@ -184,15 +184,16 @@ residue level on an allosteric task. [`gnn/`](gnn/) tries it.
 
 | | stratified AUC | GNN − ALPS | paired p |
 |---|---|---|---|
-| GNN, seed 0 | **0.622** | +0.030 | 0.136 |
-| GNN, seed 1 | **0.630** | +0.038 | 0.151 |
-| GNN + distance channel | 0.595 | +0.003 | 0.787 |
-| ALPS | 0.592 | — | — |
+| GNN, single run (4 runs, same seed) | **0.616 ± 0.007** | +0.024 ± 0.007 | 0.17 – 0.50 |
+| GNN + distance channel (one run) | 0.595 | +0.003 | 0.787 |
+| ALPS (identical in all four) | 0.592 | — | — |
 | CONTROL `ctrl_dist` | 0.509 | — | — |
 
-The strongest numbers here, decisively above the random control in both seeds, and
-**not** distinguishable from ALPS: the margin reproduces across two independent splits,
-so it is not a split artifact, but the paired test cannot separate them at n = 96.
+The strongest single predictor here, decisively above the random control in every run,
+and **not** distinguishable from ALPS at n = 96. This table used to report seed 0 at
+0.622 and seed 1 at 0.630 and call that two independent confirmations; rerunning seed 0
+alone spans 0.607 – 0.623, so it was one distribution sampled twice — see the AlloBench
+paragraph below, where the same spread is measured over eight runs.
 
 That was the whole open question, and the larger set of §1.6 answers it. At **1,042
 targets over 265 UniProt accessions** the margin does not grow — it shrinks:
@@ -231,7 +232,8 @@ numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
 The ablation is the result worth keeping. The base model is **denied** the
 distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and
 that a learned combiner handed distance reproduces it. Giving the GNN that channel makes
-it **worse**, 0.622 → 0.595, and collapses its margin over ALPS to nothing. Denying the
+it **worse**, 0.616 → 0.595, and collapses its margin over ALPS to nothing (a gap of
+0.021 against a run-to-run sd of 0.007, so it survives the correction above). Denying the
 confound did not cost anything; it helped. The same behaviour §10 measured on the
 learned combiner, in a completely different model family — which makes it look like a
 property of the task rather than of one architecture.
