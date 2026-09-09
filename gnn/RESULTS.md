@@ -300,6 +300,98 @@ Grouping it did not inflate the validation scores: best val stratAUC lands at
 0.598–0.796 across the ten folds, the same range as the test numbers, with no sign of
 the val-far-above-test gap that leakage produces.
 
+## The coordinate convention, and what the seed size decides
+
+Everything above on the AlloBench route was computed on **Cα**, because the vendored
+pipeline shipped only Cα when it was integrated. Upstream now ships a parallel `cb/`
+directory — Cβ, Cα substituted at glycine, identically keyed — and every other set in
+this repository is Cβ, which is also what ALPS's `RADIUS = 12.0` was tuned on. §1.6
+lists the coordinate difference as one of three load-bearing incompatibilities between
+the two sets. This section measures what it was worth.
+
+The Cβ cache was built through
+[`allosteric-datasets`](https://github.com/ChiShengChen/allosteric-datasets), which
+converts the upstream `cb/` directory into this repository's format. **On the 950
+targets the two caches share, the node sets and label vectors are identical in 100% of
+cases** — only the coordinates differ, and with them the contact graph (the Cα graph
+carries 63 more edges per target on average). So this is a one-variable comparison.
+
+### Cβ is worth +0.011 to ALPS and +0.039 to the GNN
+
+Same 950 targets, k = 7 runs on both sides:
+
+| | Cα | Cβ | Cβ − Cα | paired p |
+|---|---|---|---|---|
+| ALPS | 0.6074 | 0.6171 | **+0.0113** | 2.5e-06 |
+| GNN, single run | 0.6073 | 0.6468 | **+0.0388** | 4.0e-13 |
+| GNN, 7-run mean | 0.6478 | 0.6784 | +0.0297 | 9.2e-07 |
+| fuse 50/50 | 0.6600 | 0.6797 | +0.0198 | 2.0e-09 |
+
+**The learned model gains three and a half times what the hand-designed one gains.**
+That is mechanistically unsurprising and it is worth stating rather than assuming: the
+GNN passes messages along individual contacts, and Cβ geometry carries side-chain
+direction, so it is a better statement of which residues touch. ALPS uses the same
+graph but reads only its three lowest eigenvalues, which individual edges barely move.
+
+The consequence for the headline is direct. **On these 950 targets the GNN goes from an
+exact tie with ALPS (−0.0001) to +0.0297.** Part of what this file recorded as "a
+learned model and a hand-designed readout perform the same" was the learned model being
+run on the wrong coordinate convention.
+
+### But on the full Cβ set the margin is +0.014, and the gap between those two numbers
+### is the most useful result here
+
+Eight runs at seed 0 on the full 1,209-target Cβ set give **GNN − ALPS = +0.0144 ±
+0.0130**, p < 0.05 in three of eight — against +0.0107 ± 0.0094 on Cα. Read alone, that
+says nothing changed.
+
+Both are true because the two sets are not the same targets. This repository's adapter
+drops samples whose active site has fewer than three residues; the newer builder does
+not, so the Cβ set carries 241 targets the Cα set never had. Splitting by seed size:
+
+| anchor residues | n | ALPS | GNN | GNN − ALPS | present in the Cα set |
+|---|---|---|---|---|---|
+| 1 | 81 | 0.710 | 0.682 | **−0.028** | 0% |
+| 2 | 160 | 0.622 | 0.557 | **−0.065** | 0% |
+| 3–4 | 159 | 0.620 | 0.574 | −0.047 | 100% |
+| 5–9 | 288 | 0.583 | 0.646 | **+0.062** | 100% |
+| ≥ 10 | 512 | 0.640 | 0.678 | **+0.038** | 97% |
+
+| subset | n | GNN − ALPS |
+|---|---|---|
+| all | 1,200 | +0.0144 |
+| anchor ≥ 3 | 959 | +0.0313 |
+| shared with the Cα set | 946 | +0.0309 |
+
+**Whether the GNN beats ALPS is a function of how big the seed is**, and it swings by
+0.13 across that range — an order of magnitude more than every effect this file has
+spent its length on.
+
+The mechanism follows from the formulation. The GNN receives the active site *only* as
+an indicator on the graph and has to propagate from it; with one or two seeded nodes
+there is almost nothing to propagate. ALPS stiffens a neighbourhood and reads the
+spectrum, which degrades gently as the seed shrinks. So the learned model's
+disadvantage is concentrated exactly where the seed is smallest, and its advantage
+appears once the seed is large enough to carry signal.
+
+One limit on that reading: `anchor ≥ 3` and `shared with the Cα set` are nearly the same
+partition (+0.0313 against +0.0309), so seed size cannot be fully separated from
+"whichever targets the older adapter kept". What separates them is the variation
+*within* the shared population — the 3–4, 5–9 and ≥ 10 bands are all ~100% shared and
+still run from −0.047 to +0.062.
+
+### Three runs said +0.023 and eight said +0.014
+
+The first three Cβ runs averaged +0.0229 and all three sat above the eventual eight-run
+mean of +0.0144. An earlier version of this section was drafted on those three.
+
+That is the **third** time in this work that a small-sample estimate came in high and
+regressed: two seeds read as a seed effect when a fixed seed spans as much; the ensemble
+gain measured against whichever run happened to be dump 0; and now this. The pattern is
+consistent enough to be a rule rather than three anecdotes — **on this task, the first
+few draws of any noisy quantity have come in on the flattering side.** Nothing here
+should be reported from three runs again.
+
 ## Reproducing
 
 ```bash

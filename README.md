@@ -226,8 +226,25 @@ against ALPS's 0.592, **+0.033 at paired p = 2.4e-03** — the first result here
 this repository's own Bonferroni threshold (0.05/11 = 0.0045) against ALPS, on a
 different label rule and a twentieth of the targets. The second gain does *not*
 replicate: averaging k identical runs lifts the AlloBench GNN by +0.041 and the curated
-GNN by +0.003, so it is recorded as dataset-dependent rather than as a technique. Full
-numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
+GNN by +0.003, so it is recorded as dataset-dependent rather than as a technique.
+
+**The head-to-head has no single answer, and that is the more useful finding.** Rerun on
+**Cβ** coordinates — which is what ALPS was tuned on, and what the upstream pipeline now
+ships — the margin depends on how many residues the active site has:
+
+| anchor residues | n | GNN − ALPS |
+|---|---|---|
+| 1–2 | 241 | **−0.05** |
+| 3–4 | 159 | −0.047 |
+| 5–9 | 288 | **+0.062** |
+| ≥ 10 | 512 | **+0.038** |
+
+A swing of 0.13, against the ±0.01 this section has otherwise been arguing about. The
+GNN gets the active site only as an indicator to propagate from, so one or two seeded
+nodes leave it nothing to work with; ALPS stiffens a neighbourhood and reads the
+spectrum, which degrades gently. Averaged over all 1,209 Cβ targets the margin is
++0.014 ± 0.013 over eight runs; over the 950 targets shared with the Cα set, where the
+seeds are larger, it is +0.030. Full numbers in [`gnn/RESULTS.md`](gnn/RESULTS.md).
 
 The ablation is the result worth keeping. The base model is **denied** the
 distance-to-anchor channel on purpose — §10 showed proximity dominates plain AUC and
@@ -285,7 +302,7 @@ by the converter:
 
 | | curated (96) | AlloBench route (1,042) |
 |---|---|---|
-| coordinates | **Cβ** | **Cα** — `methods/alps.py` has `RADIUS = 12.0` tuned on Cβ contact geometry, so anything applied here must be re-tuned, holding out identity *and* size (§10.5) |
+| coordinates | **Cβ** | **Cα as integrated — now removable.** `methods/alps.py` has `RADIUS = 12.0` tuned on Cβ contact geometry. Upstream now ships a parallel Cβ directory, and rebuilding on it is worth **+0.011 to ALPS and +0.039 to the GNN** over 950 node-for-node identical targets (`gnn/RESULTS.md`). This row is the one of the three that a rebuild closes |
 | labels | expert annotation | **4 Å heavy-atom to the modulator** — §10 records three published conclusions that reversed when label construction changed, so the two sets are **evaluated separately, never pooled** |
 | conformation | holo (§12.4) | holo | 
 
@@ -1268,12 +1285,31 @@ provably does not exist.
 3. **ALPS hyperparameters were chosen on tier-A**; tier-B is the unbiased estimate.
 4. **Coordinates are holo conformations** (protein atoms only, ligands stripped), so this is
    not strictly an apo test. QASC's own three targets *are* apo — a systematic difference.
+   **The cost of that is now measured, and it is not measurable at the size of the only
+   apo material that exists.** The 15 apo→holo arms of
+   [quantum-allostery](https://github.com/George930502/quantum-allostery) were rebuilt as
+   node-for-node matched pairs — identical node set, anchor and labels on both members,
+   only the coordinate file differing — and ALPS scored both sides: **apo 0.674, holo
+   0.708, paired p = 0.90**, with apo ahead on 9 of 15 arms. The mean and the median
+   disagree in sign because two arms swing enormously (`ptp1b` 0.481 → 0.962,
+   `bcr_abl1_mandated` 0.492 → 0.694, the latter an arm that source's own audit marks
+   never-confirmatory). Three proteins also appear twice, as a mandated and a corrected
+   arm, so n = 15 is 12 independent proteins; dropping the duplicates changes nothing
+   (p = 0.92). **The limitation stands and is now quantified as unresolvable at n = 15**,
+   which is a stronger statement than the disclosure it replaces. Builder:
+   `builders/apo_holo_paired.py` in
+   [allosteric-datasets](https://github.com/ChiShengChen/allosteric-datasets).
 5. `apop`, `qpr`, `cpr` are skipped for N > 660 (they need O(N) eigendecompositions), so
    their n is slightly lower.
-6. **Small sets mislead, twice over.** The cooperative-QUBO hit rate looked strong at
+6. **Small sets mislead, repeatedly — five times now, and never in the unflattering
+   direction.** The cooperative-QUBO hit rate looked strong at
    n = 11 (45.5%) and vanished at n = 89 (23.6%, below its own random control); the
-   symmetric-multimer readout result reversed between n = 4 and n = 29. Treat any
-   number here from a set smaller than ~30 as a hypothesis.
+   symmetric-multimer readout result reversed between n = 4 and n = 29. Since then:
+   two GNN seeds read as a seed effect when a single fixed seed spans as much; the
+   ensemble gain measured against whichever run happened to be first (+0.051, actually
+   +0.041); and the Cβ margin at three runs (+0.023) against eight (+0.014). Treat any
+   number here from a set smaller than ~30, **or from fewer than eight runs of a
+   nondeterministic one**, as a hypothesis.
 7. **Small samples.** tier-A is 11 targets; tier-B at n = 90 gives roughly ±10% on a 49%
    rate, so the ALPS-vs-`ctrl_dist` and ALPS-vs-`apop` gaps on *significance* are inside
    the interval. The `hit5` gap (24.4% vs 7.8%) is the one that is comfortably outside it.
