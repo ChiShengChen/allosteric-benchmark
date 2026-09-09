@@ -1,10 +1,54 @@
 # gnn — results
 
-Two evaluations of the same model on two different target sets, reported separately
-because they are not interchangeable (§1.5 of the main README): the 96 curated targets
-this repository built, and the 1,042 AlloBench targets the vendored pipeline produces.
-The curated set came first and is reported first; the AlloBench result is the one that
-answers the question the curated set could only pose.
+One model, evaluated on target sets that are **not interchangeable** (§1.5 of the main
+README) and are therefore reported separately and never pooled:
+
+| section | targets | labels | coordinates |
+|---|---|---|---|
+| The curated set | 96 | expert-curated | Cβ |
+| The AlloBench set | 1,042 | 4 Å heavy-atom to modulator | Cα |
+| The coordinate convention | 1,209 / 950 matched | 4 Å heavy-atom to modulator | **Cβ** |
+
+The curated set came first. The AlloBench set was built to answer what n = 96 could only
+pose. The third section rebuilds the second on the coordinate convention the rest of this
+repository uses, and is where the head-to-head question actually gets an answer — which
+turns out to be "it depends on the size of the active site", not a single number.
+
+## Read this first: what this file has said, and what replaced it
+
+This file was rewritten several times in a few days, and **each rewrite corrected a
+number the previous one published.** The corrections are kept in the git history rather
+than quietly overwritten, which is the right call for a repository whose whole claim is
+that it can be trusted — but it means a reader who arrives at any single commit can pick
+up a figure that a later one retracted.
+
+Every retraction, newest first. The right-hand column is what the file says now.
+
+| this file once said | it now says |
+|---|---|
+| **The GNN margin reproduced across "two independent splits", +0.030 and +0.038** | Not two splits. One seed rerun four times spans 0.607–0.623, so 0.622 was a high draw and 0.630 is one more sample from the same distribution. There is no detectable seed effect |
+| **+0.0195 over ALPS at paired p = 0.0447 — significant** | +0.0107 ± 0.0094 over eight runs at one seed, p < 0.05 in two of them. The published run was a high draw |
+| **Averaging runs is worth +0.051, the largest single improvement here** | +0.041. The baseline was whichever run happened to be dump 0, and it scored 0.610 against a 0.623 single-run mean. It also does not replicate on the curated set (+0.003) |
+| **The larger sample settles it: the GNN does not beat ALPS** | True on the full sets and not the whole picture. On 950 node-for-node identical targets rebuilt on Cβ the margin is +0.030, and across seed sizes it runs from −0.065 to +0.062 |
+| **The Cβ margin is +0.023 (three runs)** | +0.0144 ± 0.0130 (eight runs). All three of the first runs sat above the eight-run mean |
+| **First-order perturbation theory preserves the ranking, −0.013 AUC** | −0.032, measured on 25 targets rather than the 4-target smoke test. Same direction of error as everything above |
+| **ALPS scores 0.694 on apo against 0.592/0.612 on holo** | That compares different target populations. Node-for-node matched pairs give apo 0.674 against holo 0.708 at paired p = 0.90 — the conformational cost is not measurable at n = 15 |
+
+**Two structural notes.** Between commits `0210027` and `07f7729` this file was
+physically broken: a string replacement intended for the AlloBench section matched the
+curated one, because both begin `### The headline`, and the curated results, the
+distance-channel ablation and the AlloBench section heading were deleted. Anything read
+from those two commits is unreliable regardless of the numbers above. And the AlloBench
+figures throughout are Cα unless a heading says Cβ; the two are not interchangeable and
+the last section measures by how much.
+
+**The pattern worth carrying out of this file.** Six of the seven rows above are the
+same error: a noisy quantity estimated from too few draws, coming in on the flattering
+side. Two seeds, one dump, three runs, four targets. None of them was a mistake in
+arithmetic and none was caught by review — each was caught by *sampling the same thing
+more times*. §12.6 of the main README now names all five instances.
+
+---
 
 ## The curated set
 
