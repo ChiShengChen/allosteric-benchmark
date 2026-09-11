@@ -171,6 +171,133 @@ reach, or a sample large enough for the quantum kernel's extra capacity to pay f
 Neither is available here — §12 of the main README makes the same point about the input
 signature.
 
+## Gates 3 and 3b at 24x the sample, on the right coordinates, with a tighter split
+
+The verdict above ends with a stated condition for overturning it: *"features carrying
+structure a polynomial kernel cannot reach, **or a sample large enough for the quantum
+kernel's extra capacity to pay for itself**. Neither is available here."*
+
+The second is now available. The AlloBench route rebuilt on Cβ through
+[allosteric-datasets](https://github.com/ChiShengChen/allosteric-datasets) gives 1,043
+targets carrying the eight features, against 44 — and it comes with two things the
+original gates did not have:
+
+| | original gates | this run |
+|---|---|---|
+| targets | 44 | **1,043** |
+| candidate residues in the pool | 16,063 | **285,333** |
+| positives in the pool | 386 | **10,230** |
+| coordinates | Cα | **Cβ**, which is what ALPS was tuned on |
+| split | protein-grouped, assigned by the script | **UniProt-grouped, carried by the dataset** |
+
+The split is the one that matters most and it is *stricter*, not looser: it keeps
+homologues of one accession out of opposite sides, where protein-grouping only keeps the
+same structure out. So a worse quantum result here cannot be explained by a split that
+got easier.
+
+### Gate 3 — the kernel
+
+| kernel | stratified AUC | vs floor |
+|---|---|---|
+| **`poly-4`** | **0.631** | +0.135 |
+| `quantum bw=0.02` | 0.628 | +0.132 |
+| `linear` | 0.626 | +0.130 |
+| `quantum bw=0.05` | 0.603 | +0.107 |
+| `quantum bw=0.1` | 0.601 | +0.104 |
+| `RBF γ=10` | 0.586 | +0.090 |
+| `RBF γ=25` | 0.578 | +0.082 |
+| `RBF γ=50` | 0.566 | +0.070 |
+| CONTROL `ctrl_random` | 0.499 | +0.003 |
+
+**Best quantum 0.628 against best classical 0.631 — difference −0.0025, paired
+p = 0.0057.**
+
+The gap is *smaller* than at n = 44 (−0.008) and it is now separable, which is exactly
+what sample size is supposed to do: the effect did not grow, the noise around it shrank.
+Read the p-value precisely — 0.0057 clears 0.05 and does **not** clear the Bonferroni
+threshold this repository applies elsewhere, 0.05/11 = 0.0045. The honest sentence is
+"significantly worse at the conventional threshold, not under our own correction".
+
+**Every element of the mechanism reproduced at 24× the sample.** The best classical
+kernel is still `poly-4`, which is the specific collapse the literature predicted for a
+bandwidth-tuned quantum kernel. The quantum optimum still sits just beneath it.
+Bandwidth still degrades monotonically toward the identity collapse gate 1 measured —
+0.628, 0.603, 0.601 at 0.02, 0.05, 0.1. The tuned RBFs still trail both by ~0.05. This
+is the same picture at a different scale, not a different picture.
+
+### Gate 3b — the variational classifier, and the split that reversed it
+
+| model | stratified AUC | vs floor |
+|---|---|---|
+| **logistic regression** | **0.623** | +0.127 |
+| VQC, 24 parameters | 0.606 | +0.110 |
+| CONTROL `ctrl_random` | 0.493 | −0.003 |
+
+**VQC minus logistic: −0.0170, paired p < 1e-4.** Same direction as at n = 44 (−0.021)
+and no longer inside the noise (p was 0.39).
+
+**That number was +0.0036 and significant *for* the quantum side until a bug was
+fixed.** `hybrid/run.py` had been taught to read the dataset's UniProt-grouped split and
+`hybrid/vqc.py` had not, so gate 3b scored a random split while gate 3 scored a grouped
+one. Under the random split:
+
+| split | logistic | VQC | VQC − logistic | paired p |
+|---|---|---|---|---|
+| random | 0.629 | 0.632 | **+0.0036** | 0.025 |
+| **UniProt-grouped** | 0.623 | **0.606** | **−0.0170** | <1e-4 |
+
+This file's own docstring for `vqc.py` promises the circuit runs "on the same folds" as
+its classical opponent. For a while it did not.
+
+### The split rule is worth more than the model family, and it leaks one way
+
+The reversal is the most transferable result in this folder:
+
+```
+  moving from a random split to a UniProt-grouped one   0.021
+  the quantum-classical difference under the right one  0.017
+```
+
+**And the leak is not symmetric.** Logistic regression barely moved, 0.629 → 0.623, a
+loss of 0.006. The VQC lost 0.026. That follows from what leakage rewards: 24 trainable
+parameters behind a non-linear feature map can memorise family-specific structure, and a
+linear model on eight features cannot. **Homologue leakage pays capacity, and in this
+comparison the quantum model is the higher-capacity side.**
+
+The general form is worth stating because it outlives this dataset: **a quantum
+advantage reported on a random split may be reporting leakage.** Here that effect alone
+was large enough to turn −0.017 into +0.004 and to carry a p-value with it.
+
+### What this does to the verdict
+
+The old verdict read "no quantum advantage on this task, this feature set, **and this
+sample size**". The last qualifier can go. At 24× the targets, 26× the positives, the
+coordinate convention corrected and the split made stricter, both quantum models are
+significantly *behind* their classical counterparts rather than tied with them:
+
+| | quantum | classical | Δ | paired p | at n = 44 |
+|---|---|---|---|---|---|
+| kernel | 0.628 (`bw=0.02`) | 0.631 (`poly-4`) | **−0.0025** | 0.0057 | −0.008, p 0.20 |
+| parametric | 0.606 (VQC) | 0.623 (logistic) | **−0.0170** | <1e-4 | −0.021, p 0.39 |
+
+The stated condition for overturning the result has been met and the result did not
+overturn. What remains of the original list is the first clause only — features carrying
+structure a polynomial kernel cannot reach — and nothing in this repository has produced
+such features.
+
+### Reproducing
+
+```bash
+python3 hybrid/features.py --targets <allosteric-datasets>/sets/allobench \
+        --max-n 700 --cache hybrid/features_allobench_cb.npz   # ~2 h, 1,043 targets
+python3 hybrid/run.py --cache hybrid/features_allobench_cb.npz   # gate 3
+python3 hybrid/vqc.py --cache hybrid/features_allobench_cb.npz   # gate 3b
+```
+
+Both scripts now prefer a `fold` carried in the cache over one they assign, and both
+print which they used. The feature cache is not committed: it is derived, and the labels
+behind it are the non-redistributable AlloBench annotations.
+
 ## Three repairs the gates needed, recorded because each is a standard failure
 
 1. **Accuracy at a 2.4% positive rate.** The first gate 2 reported linear = RBF = 0.967

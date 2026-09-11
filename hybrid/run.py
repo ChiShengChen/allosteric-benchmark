@@ -70,7 +70,20 @@ def main():
     data = list(z["data"])
     n = len(data)
     rng = np.random.default_rng(a.seed)
-    fold = rng.permutation(n) % a.folds
+    # Prefer folds carried in the data over folds invented here. The AlloBench route
+    # ships a UniProt-grouped split, which is strictly stronger than the protein-level
+    # grouping this script would otherwise do: it keeps homologues of one accession out
+    # of opposite sides, not merely the same structure. Re-splitting would discard that
+    # silently, and a quantum result read against a looser split is not comparable to
+    # one read against a tighter one.
+    if all("fold" in r for r in data):
+        fold = np.array([int(r["fold"]) for r in data])
+        a.folds = len(np.unique(fold))
+        grouping = f"UniProt-grouped ({a.folds} folds, carried from the dataset)"
+    else:
+        fold = rng.permutation(n) % a.folds
+        grouping = f"protein-grouped ({a.folds} folds, assigned here)"
+    print(f"split: {grouping}", flush=True)
     bank = kernel_bank()
     per_target = {k: {} for k in bank}
     per_target["ctrl_random"] = {}
@@ -110,7 +123,11 @@ def main():
     names = sorted(per_target, key=lambda k_: -np.nanmean(
         np.array(list(per_target[k_].values()), float)))
     ref = per_target["ctrl_random"]
-    print(f"\n=== gate 3: {n} curated targets, protein-grouped {a.folds}-fold, "
+    # Both halves of this header used to be hardcoded and both went wrong the
+    # first time this ran on anything else: the targets were not curated and
+    # the split was not protein-grouped. A header that cannot be wrong is worth
+    # more than one that reads well.
+    print(f"\n=== gate 3: {n} targets, {grouping}, "
           f"distance-stratified AUC ===")
     print(f"{'kernel':16s} {'strat AUC':>10s} {'vs floor':>9s} {'p vs random':>12s}")
     best_classical = None

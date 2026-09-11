@@ -129,7 +129,21 @@ def main():
     data = list(z["data"])
     n = len(data)
     rng = np.random.default_rng(a.seed)
-    fold = rng.permutation(n) % a.folds
+    # Prefer folds carried in the data, exactly as hybrid/run.py and gnn/run.py do.
+    # This file's own docstring says the point is to run the circuit "on the same
+    # folds" as its classical opponent -- and for a while it did not: run.py was
+    # taught to read the dataset's UniProt-grouped split and this was not, so gate 3b
+    # scored a random split while gate 3 scored a grouped one. The quantum side came
+    # out ahead under the looser split. Comparing across two splits is the failure
+    # this folder exists to avoid.
+    if all("fold" in r for r in data):
+        fold = np.array([int(r["fold"]) for r in data])
+        a.folds = len(np.unique(fold))
+        grouping = f"UniProt-grouped ({a.folds} folds, carried from the dataset)"
+    else:
+        fold = rng.permutation(n) % a.folds
+        grouping = f"protein-grouped ({a.folds} folds, assigned here)"
+    print(f"split: {grouping}", flush=True)
     per = {k: {} for k in ("VQC (24 params)", "logistic", "ctrl_random")}
 
     for k in range(a.folds):
@@ -161,7 +175,11 @@ def main():
                 auc, _ = stratified_auc(d["y"], s, d["pool"], d["dist"], 2.0)
                 per[name][d["t"]] = auc
 
-    print(f"\n=== gate 3b: {n} curated targets, protein-grouped {a.folds}-fold, "
+    # Both halves of this header used to be hardcoded and both went wrong the
+    # first time this ran on anything else: the targets were not curated and
+    # the split was not protein-grouped. A header that cannot be wrong is worth
+    # more than one that reads well.
+    print(f"\n=== gate 3b: {n} targets, {grouping}, "
           f"distance-stratified AUC ===")
     print(f"{'model':18s} {'strat AUC':>10s} {'vs floor':>9s} {'p vs random':>12s}")
     ref = per["ctrl_random"]

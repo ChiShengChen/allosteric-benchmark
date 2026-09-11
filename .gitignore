@@ -22,3 +22,5 @@ external/allobench-pipeline/AlloBench.csv
 external/allobench-pipeline/data/
 external/allobench-pipeline/metadata/manifest.built.json
 external/allobench-pipeline/metadata/allobench_filtered.json
+hybrid/features_allobench_cb.npz
+hybrid/features*.npz
